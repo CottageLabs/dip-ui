@@ -59,7 +59,7 @@ Removers a deposit information package, but does not remove files that have been
 
 Error if directory does not exist or is not recognisable as a DIP.
 
-Note: --dip does not default in this case
+Note: `--dip` does not default in this case
 
 ## Add file(s) to a DIP
 
@@ -67,11 +67,15 @@ Note: --dip does not default in this case
 
 Adds specified files to a DIP.  Adds references to the files, and does not create copies or snapshots at this stage.
 
+Error if DIP directory does not exist or is not recognisable as a DIP.
+
 ## Add metadata to a DIP
 
     dip add-metadata --format=<meta-format> [--recursive] [--dip=<directory>] file, ...
 
 Adds specified metadata files to a DIP.
+
+Error if DIP directory does not exist or is not recognisable as a DIP.
 
 ## Remove file(s) or metadata from a DIP 
 
@@ -79,6 +83,9 @@ Adds specified metadata files to a DIP.
     dip remove-metadata [--recursive] [--dip=<directory>] file, ...
 
 Removes data or metadata from a DIP.
+
+Error if DIP directory does not exist or is not recognisable as a DIP.
+
 
 ## Package DIP ready for deposit
 
@@ -88,10 +95,15 @@ Takes snapshots of data/metadata as appropriate.
 
 Returns name of package file on stdout.
 
+Error if DIP directory does not exist or is not recognisable as a DIP.
+
+
 ## Deposit DIP to designated repository
 
     dip deposit [--dip=<directory> | --package=<file>] <repository-uri>
 
 Returns URI of deposited package on stdout.
 
+Defaults to current DIP if neither `--dip` or `--package` are specified.
 
+Error if DIP directory does not exist or is not recognisable as a DIP, or package file is not a previously created DIP submission package.
