@@ -13,7 +13,8 @@ Example session (using default `--dip` values where possible):
     dip add-file --recursive ~/workspace/ros/myresearchobject
     dip add-metadata ~/workspace/ros/myresearchobject/metadata
     PACKAGE=$(dip package)
-    dip deposit --package=$PACKAGE http://databank.bodeian.ox.ac/test-deposit/...?
+    STATUS=$(dip deposit --package=$PACKAGE --endpoint=http://databank.bodeian.ox.ac/test-deposit/...?)
+    DEPOSITED=$(dip status $STATUS)
     dip show
 
 The `dip package` and `dip deposit` commands could (almost) equivalently be just:
@@ -100,10 +101,26 @@ Error if DIP directory does not exist or is not recognisable as a DIP.
 
 ## Deposit DIP to designated repository
 
-    dip deposit [--dip=<directory> | --package=<file>] <repository-uri>
+    dip deposit [--dip=<directory> | --package=<file>] --endpoint=<repository-uri>
 
-Returns URI of deposited package on stdout.
+Returns URI or token for a status resource that can be queried to obtain progress information about the deposit.
 
 Defaults to current DIP if neither `--dip` or `--package` are specified.
 
 Error if DIP directory does not exist or is not recognisable as a DIP, or package file is not a previously created DIP submission package.
+
+
+## Check status of deposit
+
+    dip status --token=<deposit-token>
+
+Interrogates the status of a deposit identified by the supplied token (returned by a previous invocation of `dip deposit`).
+
+Exit status:
+
+* 0: deposit completed successfully.  Returns URI of deposited package on stdout.
+* 1: deposit in progress, not completed.
+* 64 or greater: deposit failed.
+
+(cf. http://stackoverflow.com/questions/1101957/are-there-any-standard-exit-status-codes-in-linux)
+
