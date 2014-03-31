@@ -6,7 +6,7 @@
 from __future__ import print_function
 
 __author__      = "Graham Klyne (GK@ACM.ORG)"
-__copyright__   = "Copyright 2011-2013, University of Oxford"
+__copyright__   = "Copyright 2013-2014, University of Oxford"
 __license__     = "MIT (http://opensource.org/licenses/MIT)"
 
 import sys
@@ -19,12 +19,17 @@ import errno
 
 log = logging.getLogger(__name__)
 
-# Make sure MiscUtils can be found on path
-# if __name__ == "__main__":
-#     sys.path.append(os.path.join(sys.path[0],"../.."))
+if __name__ == "__main__":
+    p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, p)
 
+from dipcmd.dipconfig import dip_get_dip_dir, dip_set_default_dir
+from dipcmd.dipcreate import dip_create
 
 VERSION = "0.1"
+
+def progname(args):
+    return os.path.basename(args[0])
 
 def parseCommandArgs(argv):
     """
@@ -83,13 +88,17 @@ def parseCommandArgs(argv):
 
 def run(configbase, filebase, options, progname):
     """
-    Command line tool to create and submit deposit informationm packages
+    Command line tool to create and submit deposit information packages
     """
     status = 0
     if options.command == "config":
         raise NotImplementedError("@@TODO config")
     if options.command == "create":
-        raise NotImplementedError("@@TODO create")
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options)
+        if status == 0:
+            status = dip_create(dipdir)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
     elif options.command == "use":
         raise NotImplementedError("@@TODO use")
     elif options.command == "show":
@@ -139,7 +148,7 @@ def runMain():
     """
     Main program transfer function for setup.py console script
     """
-    userhome = os.path.expanduser("~")
+    userhome = os.path.join(os.path.expanduser("~"), ".dip_ui")
     filebase = os.getcwd()
     return runCommand(userhome, filebase, sys.argv)
 
@@ -147,6 +156,8 @@ if __name__ == "__main__":
     """
     Program invoked from the command line.
     """
+    p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
+    sys.path.insert(0, p)
     status = runMain()
     sys.exit(status)
 

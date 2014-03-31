@@ -44,3 +44,8 @@ nosetests.xml
 .mr.developer.cfg
 .project
 .pydevproject
+
+# project temporary files
+sword2_logging.conf
+/src/tests/test/data
+/dipenv
