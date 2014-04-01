@@ -23,8 +23,10 @@ if __name__ == "__main__":
     p = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     sys.path.insert(0, p)
 
-from dipcmd.dipconfig import dip_get_dip_dir, dip_set_default_dir
-from dipcmd.dipcreate import dip_create
+from dipcmd             import diperrors
+from dipcmd.dipconfig   import dip_get_dip_dir, dip_set_default_dir
+from dipcmd.diplocal    import dip_create, dip_use, dip_show, dip_remove
+from dipcmd.diplocal    import dip_add_files
 
 VERSION = "0.1"
 
@@ -52,13 +54,9 @@ def parseCommandArgs(argv):
                         nargs=None,
                         help="sub-command, which is one of: "+
                              "create, use, show, remove-dip, "+
-                             "add-file, add-metadata, remove-file, "+
+                             "add-files, add-metadata, remove-file, "+
                              "package, deposit"
                        )
-    parser.add_argument("files", metavar="FILES",
-                        nargs="*",
-                        help="Zero, one or more files that are added to a DIP "+
-                             "(add-files and add-metadata sub-commands only)")
     parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
     parser.add_argument("-d", "--dip",
                         dest="dip", metavar="DIP",
@@ -78,6 +76,10 @@ def parseCommandArgs(argv):
                         dest="debug", 
                         default=False,
                         help="Run with full debug output enabled")
+    parser.add_argument("files", metavar="FILES",
+                        nargs="*",
+                        help="Zero, one or more files that are added to a DIP "+
+                             "(add-files and add-metadata sub-commands only)")
     # parse command line now
     options = parser.parse_args(argv)
     if options and options.command:
@@ -90,35 +92,66 @@ def run(configbase, filebase, options, progname):
     """
     Command line tool to create and submit deposit information packages
     """
-    status = 0
+    status = diperrors.DIP_SUCCESS
+
     if options.command == "config":
         raise NotImplementedError("@@TODO config")
+
     if options.command == "create":
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options)
         if status == 0:
             status = dip_create(dipdir)
         if status == 0:
             dip_set_default_dir(configbase, dipdir)
+
     elif options.command == "use":
-        raise NotImplementedError("@@TODO use")
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            status = dip_use(dipdir)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
+
     elif options.command == "show":
-        raise NotImplementedError("@@TODO show")
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            status = dip_show(dipdir)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
+
     elif options.command == "remove":
-        raise NotImplementedError("@@TODO remove")
-    elif options.command == "add-file":
-        raise NotImplementedError("@@TODO add-file")
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=False)
+        if status == 0:
+            status = dip_remove(dipdir)
+        if status == 0:
+            dip_set_default_dir(configbase, None)
+
+    elif options.command in ["add-file","add-files"]:
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            if not options.files:
+                print("No files specified for add_files to %s"%dipdir, file=sys.stderr)
+                status = diperrors.DIP_NOFILES
+            else:
+                status = dip_add_files(dipdir, options.files, recursive=options.recursive)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
+
     elif options.command == "add-metadata":
         raise NotImplementedError("@@TODO add-metadata")
+
     elif options.command in  ["remove-file", "remove-metadata"]:
         raise NotImplementedError("@@TODO remove-file")
+
     elif options.command == "package":
         raise NotImplementedError("@@TODO package")
+
     elif options.command == "deposit":
         raise NotImplementedError("@@TODO deposit")
+
     else:
         print("Un-recognised sub-command: %s"%(options.command), file=sys.stderr)
         print("Use '%s --help' to see usage summary"%(progname), file=sys.stderr)        
-        status = 1
+        status = diperrors.DIP_BADCMD
     # Exit
     return status
 
@@ -138,10 +171,11 @@ def runCommand(configbase, filebase, argv):
     log.debug("Options: %s"%(repr(options)))
     # else:
     #     logging.basicConfig()
-    status = 1
     if options:
         progname = os.path.basename(argv[0])
         status   = run(configbase, filebase, options, progname)
+    else:
+        status = diperrors.DIP_BADCMD
     return status
 
 def runMain():

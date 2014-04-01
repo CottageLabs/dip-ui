@@ -47,5 +47,6 @@ nosetests.xml
 
 # project temporary files
 sword2_logging.conf
-/src/tests/test/data
+/src/tests/test/data/config
+/src/tests/test/data/dipdir
 /dipenv
