@@ -26,7 +26,7 @@ if __name__ == "__main__":
 from dipcmd             import diperrors
 from dipcmd.dipconfig   import dip_get_dip_dir, dip_set_default_dir
 from dipcmd.diplocal    import dip_create, dip_use, dip_show, dip_remove
-from dipcmd.diplocal    import dip_add_files
+from dipcmd.diplocal    import dip_add_files, dip_remove_files
 
 VERSION = "0.1"
 
@@ -139,8 +139,16 @@ def run(configbase, filebase, options, progname):
     elif options.command == "add-metadata":
         raise NotImplementedError("@@TODO add-metadata")
 
-    elif options.command in  ["remove-file", "remove-metadata"]:
-        raise NotImplementedError("@@TODO remove-file")
+    elif options.command in  ["remove-file", "remove-files", "remove-metadata"]:
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            if not options.files:
+                print("No files specified for remove-file from %s"%dipdir, file=sys.stderr)
+                status = diperrors.DIP_NOFILES
+            else:
+                status = dip_remove_files(dipdir, options.files, recursive=options.recursive)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
 
     elif options.command == "package":
         raise NotImplementedError("@@TODO package")

@@ -37,6 +37,7 @@ from dipcmd.dipmain         import runCommand
 from dipcmd.dipconfig       import dip_get_default_dir
 
 from tests.StdoutContext    import SwitchStdout, SwitchStderr
+from tests.SetcwdContext    import ChangeCurrentDir
 
 BASE_DIR    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test/data")
 BASE_CONFIG = os.path.join(BASE_DIR, "config")
@@ -57,8 +58,16 @@ class TestDipCmd(TestCase):
             pass
         return
 
+    # Support funvtions
+
+    def fpath(self, ref):
+        return os.path.join(BASE_DIR, ref)
+
+    def dpath(self, ref):
+        return os.path.join(self._dipdir, ref)
+
     def create_test_dip(self, dipref="testdip"):
-        dipdir = os.path.join(self._dipdir, dipref)
+        dipdir = self.dpath(dipref)
         # create
         argv   = ["dip", "create", "--dip", dipref]
         outstr = StringIO.StringIO()
@@ -66,6 +75,34 @@ class TestDipCmd(TestCase):
             status = runCommand(self._cnfdir, self._dipdir, argv)
         self.assertEqual(status, diperrors.DIP_SUCCESS)
         return dipdir
+
+    def create_populate_test_dip(self, dipref="testdip"):
+        dipdir = self.create_test_dip(dipref=dipref)
+        filespath  = self.fpath("files")
+        argv   = ["dip", "--recursive", "add-files", filespath]
+        outstr = StringIO.StringIO()
+        with SwitchStdout(outstr):
+            status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        return dipdir
+
+    def assertFilesInDip(self, filespresent=[], filesabsent=[]):
+        argv   = ["dip", "show"]
+        outstr = StringIO.StringIO()
+        with SwitchStdout(outstr):
+            status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        # print("***** files in DIP *****\n%s*****"%result)
+        for f in filespresent:
+            p = self.fpath(f)
+            self.assertIn(" %s"%p, result)
+        for f in filesabsent:
+            p = self.fpath(f)
+            self.assertNotIn(" %s"%p, result)
+        return
+
+    # Tests
 
     def test_01_dip_create(self):
         dipdir = os.path.join(self._dipdir, "testdip")
@@ -168,12 +205,12 @@ class TestDipCmd(TestCase):
         self.assertFalse(os.path.isdir(dipdir))
         return
 
-    def test_05_dip_add_file_single(self):
+    def test_10_dip_add_file_single(self):
         # create
         dipdir = self.create_test_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # add
-        file1path = os.path.join(BASE_DIR, "files/file1.txt")
+        file1path = self.fpath("files/file1.txt")
         argv   = ["dip", "add-files", file1path]
         outstr = StringIO.StringIO()
         with SwitchStdout(outstr):
@@ -196,16 +233,16 @@ class TestDipCmd(TestCase):
         self.assertIn(" %s"%file1path, result)
         return
 
-    def test_06_dip_add_files_multi(self):
+    def test_11_dip_add_files_multi(self):
         # create
         dipdir = self.create_test_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # add
-        file1path = os.path.join(BASE_DIR, "files/file1.txt")
-        file2path = os.path.join(BASE_DIR, "files/file2.txt")
-        sub1path  = os.path.join(BASE_DIR, "files/sub1")
-        sub11path = os.path.join(BASE_DIR, "files/sub1/sub11.txt")
-        sub12path = os.path.join(BASE_DIR, "files/sub1/sub12.txt")
+        file1path = self.fpath("files/file1.txt")
+        file2path = self.fpath("files/file2.txt")
+        sub1path  = self.fpath("files/sub1")
+        sub11path = self.fpath("files/sub1/sub11.txt")
+        sub12path = self.fpath("files/sub1/sub12.txt")
         argv   = ["dip", "add-files", file1path, file2path, sub1path]
         outstr = StringIO.StringIO()
         with SwitchStdout(outstr):
@@ -234,20 +271,20 @@ class TestDipCmd(TestCase):
         self.assertIn(" %s"%sub12path, result)
         return
 
-    def test_07_dip_add_files_recursive(self):
+    def test_12_dip_add_files_recursive(self):
         # create
         dipdir = self.create_test_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # add
-        filespath  = os.path.join(BASE_DIR, "files")
-        file1path  = os.path.join(BASE_DIR, "files/file1.txt")
-        file2path  = os.path.join(BASE_DIR, "files/file2.txt")
-        sub11path  = os.path.join(BASE_DIR, "files/sub1/sub11.txt")
-        sub12path  = os.path.join(BASE_DIR, "files/sub1/sub12.txt")
-        sub21path  = os.path.join(BASE_DIR, "files/sub2/sub21.txt")
-        sub22path  = os.path.join(BASE_DIR, "files/sub2/sub22.txt")
-        sub311path = os.path.join(BASE_DIR, "files/sub3/sub31/sub311.txt")
-        sub331path = os.path.join(BASE_DIR, "files/sub3/sub33/sub331.txt")
+        filespath  = self.fpath("files")
+        file1path  = self.fpath("files/file1.txt")
+        file2path  = self.fpath("files/file2.txt")
+        sub11path  = self.fpath("files/sub1/sub11.txt")
+        sub12path  = self.fpath("files/sub1/sub12.txt")
+        sub21path  = self.fpath("files/sub2/sub21.txt")
+        sub22path  = self.fpath("files/sub2/sub22.txt")
+        sub311path = self.fpath("files/sub3/sub31/sub311.txt")
+        sub331path = self.fpath("files/sub3/sub33/sub331.txt")
         argv   = ["dip", "--recursive", "add-files", filespath]
         outstr = StringIO.StringIO()
         with SwitchStdout(outstr):
@@ -282,6 +319,99 @@ class TestDipCmd(TestCase):
         self.assertIn(" %s"%sub22path, result)
         self.assertIn(" %s"%sub311path, result)
         self.assertIn(" %s"%sub331path, result)
+        return
+
+    def test_13_dip_remove_file_single(self):
+        # create
+        dipdir = self.create_populate_test_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Check files present
+        self.assertFilesInDip(filespresent=["files/file1.txt", "files/file2.txt"])
+        # Remove file
+        file1path  = self.fpath("files/file1.txt")
+        argv   = ["dip", "remove-file", "files/file1.txt"]
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn("Removing files from deposit information package at %s"%dipdir, result)
+        self.assertIn("  %s"%file1path, result)
+        # Check files present again
+        self.assertFilesInDip(filesabsent=["files/file1.txt"], filespresent=["files/file2.txt"])
+        return
+
+    def test_14_dip_remove_file_multiple(self):
+        # create
+        dipdir = self.create_populate_test_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Check files present
+        self.assertFilesInDip(
+            filespresent=[
+                "files/file1.txt", "files/file2.txt", 
+                "files/sub1/sub11.txt", "files/sub1/sub12.txt"
+                ]
+            )
+        # Remove file
+        argv   = ["dip", "remove-files", "files/file1.txt", "files/file2.txt", "files/sub1"]
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn("Removing files from deposit information package at %s"%dipdir, result)
+        self.assertIn("  %s"%self.fpath("files/file1.txt"), result)
+        self.assertIn("  %s"%self.fpath("files/file2.txt"), result)
+        self.assertIn("  %s"%self.fpath("files/sub1/sub11.txt"), result)
+        self.assertIn("  %s"%self.fpath("files/sub1/sub12.txt"), result)
+        # Check files present again
+        self.assertFilesInDip(
+            filesabsent=[
+                "files/file1.txt", "files/file2.txt", 
+                "files/sub1/sub11.txt", "files/sub1/sub12.txt"
+                ]
+            )
+        return
+
+    def test_15_dip_remove_file_recursive(self):
+        # create
+        dipdir = self.create_populate_test_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Check files present
+        self.assertFilesInDip(
+            filespresent=[
+                "files/file1.txt", "files/file2.txt", 
+                "files/sub1/sub11.txt", "files/sub1/sub12.txt",
+                "files/sub2/sub21.txt", "files/sub2/sub22.txt",
+                "files/sub3/sub31/sub311.txt",
+                "files/sub3/sub33/sub331.txt"
+                ]
+            )
+        # Remove file
+        argv   = ["dip", "--recursive", "remove-files", "files/sub3"]
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn("Removing files from deposit information package at %s"%dipdir, result)
+        self.assertIn("  %s"%self.fpath("files/sub3/sub31/sub311.txt"), result)
+        self.assertIn("  %s"%self.fpath("files/sub3/sub33/sub331.txt"), result)
+        # Check files present again
+        self.assertFilesInDip(
+            filespresent=[
+                "files/file1.txt", "files/file2.txt", 
+                "files/sub1/sub11.txt", "files/sub1/sub12.txt",
+                "files/sub2/sub21.txt", "files/sub2/sub22.txt"
+                ],
+            filesabsent=[
+                "files/sub3/sub31/sub311.txt",
+                "files/sub3/sub33/sub331.txt"
+                ]
+            )
         return
 
 if __name__ == "__main__":

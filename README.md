@@ -54,7 +54,7 @@ Example session (using default `--dip` values where possible):
     dip create --dip=~/workspace/dip/mypackage  
     dip show
     dip add-file --recursive ~/workspace/ros/myresearchobject
-    dip add-metadata ~/workspace/ros/myresearchobject/metadata
+    dip add-metadata --format=text/json-ld ~/workspace/ros/myresearchobject/metadata
     PACKAGE=$(dip package)
     STATUS=$(dip deposit --package=$PACKAGE --endpoint=http://databank.bodeian.ox.ac/test-deposit/...?)
     DEPOSITED=$(dip status $STATUS)
@@ -127,6 +127,12 @@ Error if DIP directory does not exist or is not recognisable as a DIP.
     dip add-metadata --format=<meta-format> [--recursive] [--dip=<directory>] file, ...
 
 Adds specified metadata files to a DIP.
+
+@@TODO: need to clarify `<meta-format>` options.
+
+@@TODO: Not yet implemneted in `dip`
+
+Error if metadata format is not recognized, or data provided doesn't confirm to indicated format.
 
 Error if DIP directory does not exist or is not recognisable as a DIP.
 

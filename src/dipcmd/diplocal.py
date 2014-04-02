@@ -120,49 +120,106 @@ def dip_remove(dipdir):
     print("Removed deposit information package at %s"%(dipdir))
     return diperrors.DIP_SUCCESS
 
-def dip_add_files(dipdir, files, recursive=False):
+def dip_visit_files(basedir, filepath, scan, recursive, visitfn):
     """
-    Add filoes to a deposit information package.  E.g.
+    Recursive helper function to process files and subdirectories
 
-        dip add-file [--recursive] [--dip=<directory>] file, ...
+    If a file is specified, the visitor finction is applied to that file.
 
-    dipdir  is a fully qualified DIP directory name
+    If a directory is specified, its contents are visited in `scan` is True.
+
+    basedir     is a base directory for resolving relative file references
+    filepath    is a file or directory to be visited
+    scan        is True if the current directory is to be scanned
+    recursive   is True if all nested directories are to be scanned
+    visitfn     is a visitor function to be applied to each visited file.
+
+    Returns diperrors.DIP_SUCCESS, or the value from the first visitor function
+    call that does not return return diperrors.DIP_SUCCESS.
+    """
+    log.debug("dip_visit_files: %s, %s"%(basedir, filepath))
+    p = os.path.join(basedir, filepath)
+    if os.path.isdir(p):
+        if scan:
+            files = os.listdir(p)
+            for f in files:
+                status = dip_visit_files(p, f, recursive, recursive, visitfn)
+                if status != diperrors.DIP_SUCCESS:
+                    break
+    else:
+        status = visitfn(p)
+    return status
+
+def dip_add_files(dipdir, files, recursive=False, basedir=None):
+    """
+    Add files to a deposit information package.  E.g.
+
+        dip [--recursive] [--dip=<directory>] add-file file ...
+
+    dipdir      is a fully qualified DIP directory name
+    files       is a list of files/directories to be added
+    recursive   True if directories encountered are to be scanned recursively
+                (otherwise) explicitly-mentioned directories are scanned
+                just one level down.
+    basedir     is a base directory for resolving relative file references
 
     returns zero to indicate success, or a non-zero status code.
     """
     status = dip_use(dipdir, report_dir=False)
     if status != diperrors.DIP_SUCCESS:
         return status
+    if not basedir:
+        basedir = os.getcwd()
     print("Adding files to deposit information package at %s ..."%(dipdir))
     d   = dip.DIP(dipdir)
     for f in files:
-        status = dip_add_files_subdir(d, dipdir, f, True, recursive)
+        # -- visitor function
+        def dip_set_file(p):
+            d.set_file(p)
+            print("  %s"%p)
+            return diperrors.DIP_SUCCESS
+        # --
+        status = dip_visit_files(basedir, f, True, recursive, dip_set_file)
         if status != diperrors.DIP_SUCCESS:
             break
     if len(files) > 1 or recursive:
         print("Done.")
     return status
 
-def dip_add_files_subdir(dip, subdir, f, scan, recursive):
+def dip_remove_files(dipdir, files, recursive=False, basedir=None):
     """
-    Auxilliary recursive helper function to process files and subdirectories
+    Remove files from a deposit information package.  E.g.
 
-    scan        is True if the current directory is to be scanned
-    recursive   is True if all nested directories are to be scanned
+        dip [--recursive] [--dip=<directory>] remove-file file ...
+
+    dipdir      is a fully qualified DIP directory name
+    files       is a list of files/directories to be removed from the DIP
+    recursive   True if directories encountered are to be scanned recursively
+                (otherwise) explicitly-mentioned directories are scanned
+                just one level down.
+    basedir     is a base directory for resolving relative file references
+
+    returns zero to indicate success, or a non-zero status code.
     """
-    log.debug("dip_add_files_subdir: %s, %s"%(subdir, f))
-    status = diperrors.DIP_SUCCESS
-    p = os.path.join(subdir, f)
-    if os.path.isdir(p):
-        if scan:
-            files = os.listdir(p)
-            for f in files:
-                status = dip_add_files_subdir(dip, p, f, recursive, recursive)
-                if status != diperrors.DIP_SUCCESS:
-                    break
-    else:
-        print("  %s"%p)
-        dip.set_file(p)
+    status = dip_use(dipdir, report_dir=False)
+    if status != diperrors.DIP_SUCCESS:
+        return status
+    if not basedir:
+        basedir = os.getcwd()
+    print("Removing files from deposit information package at %s ..."%(dipdir))
+    d   = dip.DIP(dipdir)
+    for f in files:
+        # -- visitor function
+        def dip_remove_file(p):
+            d.remove_file(p)
+            print("  %s"%p)
+            return diperrors.DIP_SUCCESS
+        # --
+        status = dip_visit_files(basedir, f, True, recursive, dip_remove_file)
+        if status != diperrors.DIP_SUCCESS:
+            break
+    if len(files) > 1 or recursive:
+        print("Done.")
     return status
 
 # End.
