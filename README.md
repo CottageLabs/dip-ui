@@ -128,13 +128,13 @@ Error if DIP directory does not exist or is not recognisable as a DIP.
 
 Adds specified metadata files to a DIP.
 
-@@TODO: need to clarify `<meta-format>` options.
-
-@@TODO: Not yet implemneted in `dip`
-
 Error if metadata format is not recognized, or data provided doesn't confirm to indicated format.
 
 Error if DIP directory does not exist or is not recognisable as a DIP.
+
+@@TODO: need to clarify `<meta-format>` options.
+
+@@TODO: Not yet implemneted in `dip`
 
 
 ### Remove file(s) or metadata from a DIP 
@@ -157,6 +157,8 @@ Returns name of package file on stdout.
 
 Error if DIP directory does not exist or is not recognisable as a DIP.
 
+@@TODO: Not yet implemented in `dip`
+
 
 ### Deposit DIP to designated repository
 
@@ -167,6 +169,8 @@ Returns a token that can be used withj `dip status` (below) to obtain progress i
 Defaults to current DIP if neither `--dip` or `--package` are specified.
 
 Error if DIP directory does not exist or is not recognisable as a DIP, or package file is not a previously created DIP submission package.
+
+@@TODO: Not fully implemented in `dip` (metadata only?)
 
 
 ### Check status of deposit
@@ -182,3 +186,6 @@ Exit status:
 * 64 or greater: deposit failed.
 
 (cf. http://stackoverflow.com/questions/1101957/are-there-any-standard-exit-status-codes-in-linux)
+
+@@TODO: Not fully implemented in `dip` (metadata only?)
+
