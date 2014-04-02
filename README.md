@@ -3,16 +3,16 @@
 Deposit information package user interfaces
 
 
-# Getting started
+## Getting started
 
-## Installation
+### Installation
 
     cd $BASEDIR
     git clone git@github.com:CottageLabs/dip-ui.git
 
 @@TODO: provide proper setup.py; create virtalenv for installation; etc./
 
-## Testing
+### Testing
 
 Instructions assume starting with current directory being the root of the dip-ui project; e.g.
 
@@ -45,7 +45,7 @@ Instructions assume starting with current directory being the root of the dip-ui
         nosetests
 
 
-# Command options
+## Command options
 
 DIP = deposit information package.  A DIP contains *references* to files elsewhere in the local file system.
 
@@ -65,7 +65,7 @@ The `dip package` and `dip deposit` commands could (almost) equivalently be just
     dip deposit
 
 
-## dip config ...
+### dip config ...
 
 Sets configuration options
 
@@ -77,7 +77,7 @@ Details TBD.
 The main purpose of this will probably be to establish parameters for sword collections.
 
 
-## Create empty DIP
+### Create empty DIP
 
     dip create --dip=<directory>
 
@@ -86,14 +86,14 @@ Creates empty DIP, and establishes it as the default DIP for subsequent commands
 Error if directory already exists.
 
 
-## Set default DIP
+### Set default DIP
 
     dip use --dip=<directory>
 
 Error if directory does not exist or is not recognisable as a DIP.
 
 
-## Display a DIP
+### Display a DIP
 
     dip show [--dip=<directory>]
 
@@ -102,7 +102,7 @@ Displays content of indicated DIP.
 Error if directory does not exist or is not recognisable as a DIP.
 
 
-## Delete a DIP
+### Delete a DIP
 
     dip remove --dip=<directory>
 
@@ -113,7 +113,7 @@ Error if directory does not exist or is not recognisable as a DIP.
 Note: `--dip` does not default in this case
 
 
-## Add file(s) to a DIP
+### Add file(s) to a DIP
 
     dip add-file [--recursive] [--dip=<directory>] file, ...
 
@@ -122,7 +122,7 @@ Adds specified files to a DIP.  Adds references to the files, and does not creat
 Error if DIP directory does not exist or is not recognisable as a DIP.
 
 
-## Add metadata to a DIP
+### Add metadata to a DIP
 
     dip add-metadata --format=<meta-format> [--recursive] [--dip=<directory>] file, ...
 
@@ -131,7 +131,7 @@ Adds specified metadata files to a DIP.
 Error if DIP directory does not exist or is not recognisable as a DIP.
 
 
-## Remove file(s) or metadata from a DIP 
+### Remove file(s) or metadata from a DIP 
 
     dip remove-file [--recursive] [--dip=<directory>] file, ...
     dip remove-metadata [--recursive] [--dip=<directory>] file, ...
@@ -141,7 +141,7 @@ Removes data or metadata from a DIP.
 Error if DIP directory does not exist or is not recognisable as a DIP.
 
 
-## Package DIP ready for deposit
+### Package DIP ready for deposit
 
     dip package [--dip=<directory>]
 
@@ -152,7 +152,7 @@ Returns name of package file on stdout.
 Error if DIP directory does not exist or is not recognisable as a DIP.
 
 
-## Deposit DIP to designated repository
+### Deposit DIP to designated repository
 
     dip deposit [--dip=<directory> | --package=<file>] --endpoint=<collection-uri>
 
@@ -163,7 +163,7 @@ Defaults to current DIP if neither `--dip` or `--package` are specified.
 Error if DIP directory does not exist or is not recognisable as a DIP, or package file is not a previously created DIP submission package.
 
 
-## Check status of deposit
+### Check status of deposit
 
     dip status [--dip=<directory> | --package=<file>] --token=<deposit-token>
 
