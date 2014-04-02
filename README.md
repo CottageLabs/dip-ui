@@ -2,6 +2,49 @@
 
 Deposit information package user interfaces
 
+
+# Getting started
+
+## Installation
+
+    cd $BASEDIR
+    git clone git@github.com:CottageLabs/dip-ui.git
+
+@@TODO: provide proper setup.py; create virtalenv for installation; etc./
+
+## Testing
+
+Instructions assume starting with current directory being the root of the dip-ui project; e.g.
+
+    $ pwd
+    /Users/graham/workspace/github/cottagelabs/dip-ui
+
+1. Create and activate python virtual environment:
+
+        virtualenv dipenv
+        . dipenv/bin/activate
+
+2. Install lxml (used by `dip`, but not imnstalled as dependency):
+
+        pip install lxml
+
+3. Install `dip`.  I am assuming dip repository is in sibling directory of `dip-ui` project.
+
+        cd ../dip/
+        python setup.py build
+        python setup.py install
+        cd ../dip-ui
+
+4. Install nose:
+
+        pip install nose
+
+5. Run tests:
+
+        cd src
+        nosetests
+
+
 # Command options
 
 DIP = deposit information package.  A DIP contains *references* to files elsewhere in the local file system.
