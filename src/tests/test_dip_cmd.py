@@ -58,7 +58,7 @@ class TestDipCmd(TestCase):
             pass
         return
 
-    # Support funvtions
+    # Support functions
 
     def fpath(self, ref):
         return os.path.join(BASE_DIR, ref)
@@ -412,6 +412,193 @@ class TestDipCmd(TestCase):
                 "files/sub3/sub33/sub331.txt"
                 ]
             )
+        return
+
+    def test_20_dip_add_show_attributes(self):
+        # create
+        dipdir = self.create_test_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Test attributes
+        argvshow   = (
+            [ "dip", "show-attributes"
+            , "dc:creator"
+            , "dc:created"
+            , "dc:title"
+            , "dc:identifier"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvshow)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertNotIn("dc:creator",      result)
+        self.assertNotIn("dc:created",      result)
+        self.assertNotIn("dc:title",        result)
+        self.assertNotIn("dc:identifier",   result)
+        # Add attributes
+        argvset   = (
+            [ "dip", "add-attributes"
+            , "dc:creator=John Smith", "dc:creator=Tom Jones"
+            , "dc:created=2014-01-01"
+            , '''dc:title="Smith and Jones' package"'''
+            , "dc:identifier=testdip/123456789"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvset)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn("Adding attributes to deposit information package at %s"%dipdir, result)
+        self.assertIn('''  dc:creator="John Smith"''',              result)
+        self.assertIn('''  dc:creator="Tom Jones"''',               result)
+        self.assertIn('''  dc:created="2014-01-01"''',              result)
+        self.assertIn('''  dc:title="Smith and Jones' package"''',  result)
+        self.assertIn('''  dc:identifier="testdip/123456789"''',    result)
+        # Test attributes again
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvshow)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn('''dc:creator="John Smith"''',              result)
+        self.assertIn('''dc:creator="Tom Jones"''',               result)
+        self.assertIn('''dc:created="2014-01-01"''',              result)
+        self.assertIn('''dc:title="Smith and Jones' package"''',  result)
+        self.assertIn('''dc:identifier="testdip/123456789"''',    result)
+        return
+
+    def test_21_dip_remove_attributes(self):
+        # create
+        dipdir = self.create_test_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Add attributes
+        argvset   = (
+            [ "dip", "add-attributes"
+            , "dc:creator=John Smith", "dc:creator=Tom Jones"
+            , "dc:created=2014-01-01"
+            , '''dc:title="Smith and Jones' package"'''
+            , "dc:identifier=testdip/123456789"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvset)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        # Test attributes
+        argvshow   = (
+            [ "dip", "show-attributes"
+            , "dc:creator"
+            , "dc:created"
+            , "dc:title"
+            , "dc:identifier"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvshow)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn('''dc:creator="John Smith"''',              result)
+        self.assertIn('''dc:creator="Tom Jones"''',               result)
+        self.assertIn('''dc:created="2014-01-01"''',              result)
+        self.assertIn('''dc:title="Smith and Jones' package"''',  result)
+        self.assertIn('''dc:identifier="testdip/123456789"''',    result)
+        # Remove some attributes
+        argvremove   = (
+            [ "dip", "remove-attributes"
+            , "dc:creator"
+            , "dc:title"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvremove)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn("Removing attributes from deposit information package at %s"%dipdir, result)
+        self.assertIn('''  dc:creator''',   result)
+        self.assertIn('''  dc:title''',     result)
+        # Test attributes again
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvshow)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn('''dc:created="2014-01-01"''',                result)
+        self.assertIn('''dc:identifier="testdip/123456789"''',      result)
+        self.assertNotIn('''dc:creator="John Smith"''',             result)
+        self.assertNotIn('''dc:creator="Tom Jones"''',              result)
+        self.assertNotIn('''dc:title="Smith and Jones' package"''', result)
+        return
+
+    def test_22_dip_update_attributes(self):
+        # create
+        dipdir = self.create_test_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Add attributes
+        argvset   = (
+            [ "dip", "add-attributes"
+            , "dc:creator=John Smith"
+            , "dc:created=2014-01-01"
+            , '''dc:title="Smith and Jones' package"'''
+            , "dc:identifier=testdip/123456789"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvset)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        # Test attributes
+        argvshow   = (
+            [ "dip", "show-attributes"
+            , "dc:creator"
+            , "dc:created"
+            , "dc:title"
+            , "dc:identifier"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvshow)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn('''dc:creator="John Smith"''',                result)
+        self.assertNotIn('''dc:creator="Tom Jones"''',              result)
+        self.assertIn('''dc:created="2014-01-01"''',                result)
+        self.assertIn('''dc:title="Smith and Jones' package"''',    result)
+        self.assertIn('''dc:identifier="testdip/123456789"''',      result)
+        # Update some attributes
+        argvupdate   = (
+            [ "dip", "add-attributes"
+            , "dc:creator=Tom Jones"
+            , "dc:created=2014-04-02"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvupdate)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn("Adding attributes to deposit information package at %s"%dipdir, result)
+        self.assertIn('''  dc:creator="Tom Jones"''',               result)
+        self.assertIn('''  dc:created="2014-04-02"''',              result)
+        # Test attributes again
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvshow)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn('''dc:creator="John Smith"''',                result)
+        self.assertIn('''dc:creator="Tom Jones"''',                 result)
+        self.assertIn('''dc:created="2014-04-02"''',                result)
+        self.assertNotIn('''dc:created="2014-01-01"''',             result)
+        self.assertIn('''dc:title="Smith and Jones' package"''',    result)
+        self.assertIn('''dc:identifier="testdip/123456789"''',      result)
         return
 
 if __name__ == "__main__":

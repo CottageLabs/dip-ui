@@ -222,4 +222,115 @@ def dip_remove_files(dipdir, files, recursive=False, basedir=None):
         print("Done.")
     return status
 
+def _check_attribute_name(aname):
+    """
+    Check attribute name, returning either a properties dictionary or None
+    """
+    attributes_allowed = (
+        { 'dc:creator':     { 'multiple': True }
+        , 'dc:created':     { 'multiple': False }
+        , 'dc:title':       { 'multiple': False }
+        , 'dc:identifier':  { 'multiple': False }
+        })
+    if aname not in attributes_allowed:
+        print("Unrecognized attribute name: %s"%(aname), file=sys.stderr)
+        return None
+    return attributes_allowed[aname]
+
+def dip_set_attributes(dipdir, attrs):
+    """
+    Add attributes to a deposit information package.
+
+    dipdir      is a fully qualified DIP directory name
+    attrs       is a list of attributes to be added.  Each attribute is
+                a "name=value" string that is dismantles into attribute name
+                and value to be added.
+
+    returns zero to indicate success, or a non-zero status code.
+    """
+    status = dip_use(dipdir, report_dir=False)
+    if status != diperrors.DIP_SUCCESS:
+        return status
+    print("Adding attributes to deposit information package at %s ..."%(dipdir))
+    d = dip.DIP(dipdir)
+    for attr in attrs:
+        #                            1    2      3 4     5
+        attrvalre    = re.compile(r'^(\w+:(\w+))=("(.*)"|(.*))$')
+        attrvalmatch = attrvalre.match(attr)
+        if not attrvalmatch:
+            print("Attribute name/value format is not valid: %s"%(attr), file=sys.stderr)
+            return diperrors.DIP_INVALIDATTR
+        aname = attrvalmatch.group(1)
+        aterm = attrvalmatch.group(2)
+        aval  = attrvalmatch.group(4) or attrvalmatch.group(5) or ""
+        aprop = _check_attribute_name(aname)
+        if not aprop:
+            return diperrors.DIP_UNKNOWNATTR
+        if not aprop['multiple']:
+            d.remove_dublin_core(dcterm=aterm)
+        d.add_dublin_core(aterm, aval)
+        print('''  %s="%s"'''%(aname, aval.replace('"', '\\"')))
+    # @@save here?
+    return diperrors.DIP_SUCCESS
+
+def dip_show_attributes(dipdir, attrs):
+    """
+    Display attributes from a deposit information package.
+
+    dipdir      is a fully qualified DIP directory name
+    attrs       is a list of attribute named to be displayed.
+
+    returns zero to indicate success, or a non-zero status code.
+    """
+    status = dip_use(dipdir, report_dir=False)
+    if status != diperrors.DIP_SUCCESS:
+        return status
+    d = dip.DIP(dipdir)
+    for attr in attrs:
+        #                            1    2
+        attrvalre    = re.compile(r'^(\w+:(\w+))$')
+        attrvalmatch = attrvalre.match(attr)
+        if not attrvalmatch:
+            print("Attribute name format is not valid: %s"%(attr), file=sys.stderr)
+            return diperrors.DIP_INVALIDATTR
+        aname = attrvalmatch.group(1)
+        aterm = attrvalmatch.group(2)
+        aprop = _check_attribute_name(aname)
+        if not aprop:
+            return diperrors.DIP_UNKNOWNATTR
+        avals = d.get_dublin_core(dcterm=aterm)
+        for (t, v, l) in avals:
+            print('''dc:%s="%s"'''%(t, v.replace('"', '\\"')))
+    return status
+
+def dip_remove_attributes(dipdir, attrs):
+    """
+    Display attributes from a deposit information package.
+
+    dipdir      is a fully qualified DIP directory name
+    attrs       is a list of attribute named to be displayed.
+
+    returns zero to indicate success, or a non-zero status code.
+    """
+    status = dip_use(dipdir, report_dir=False)
+    if status != diperrors.DIP_SUCCESS:
+        return status
+    print("Removing attributes from deposit information package at %s ..."%(dipdir))
+    d = dip.DIP(dipdir)
+    for attr in attrs:
+        #                            1    2
+        attrvalre    = re.compile(r'^(\w+:(\w+))$')
+        attrvalmatch = attrvalre.match(attr)
+        if not attrvalmatch:
+            print("Attribute name format is not valid: %s"%(attr), file=sys.stderr)
+            return diperrors.DIP_INVALIDATTR
+        aname = attrvalmatch.group(1)
+        aterm = attrvalmatch.group(2)
+        aprop = _check_attribute_name(aname)
+        if not aprop:
+            return diperrors.DIP_UNKNOWNATTR
+        avals = d.remove_dublin_core(dcterm=aterm)
+        print('''  %s'''%(aname))
+    return diperrors.DIP_SUCCESS
+
 # End.

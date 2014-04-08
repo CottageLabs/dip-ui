@@ -27,6 +27,7 @@ from dipcmd             import diperrors
 from dipcmd.dipconfig   import dip_get_dip_dir, dip_set_default_dir
 from dipcmd.diplocal    import dip_create, dip_use, dip_show, dip_remove
 from dipcmd.diplocal    import dip_add_files, dip_remove_files
+from dipcmd.diplocal    import dip_set_attributes, dip_show_attributes, dip_remove_attributes
 
 VERSION = "0.1"
 
@@ -55,6 +56,7 @@ def parseCommandArgs(argv):
                         help="sub-command, which is one of: "+
                              "create, use, show, remove-dip, "+
                              "add-files, add-metadata, remove-file, "+
+                             "add-attribute, show-attribute, remove-attribute, "+
                              "package, deposit"
                        )
     parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
@@ -79,7 +81,12 @@ def parseCommandArgs(argv):
     parser.add_argument("files", metavar="FILES",
                         nargs="*",
                         help="Zero, one or more files that are added to a DIP "+
-                             "(add-files and add-metadata sub-commands only)")
+                             "(add-files and add-metadata sub-commands only).\n"+
+                             "Zero, one or more attribute-value pairs that are added to a DIP "+
+                             "(add-attributes sub-command only).\n"+
+                             "Zero, one or more attribute names that are displayed or removed from a DIP "+
+                             "(show-attributes or remove-attributes sub-commands only)."
+                        )
     # parse command line now
     options = parser.parse_args(argv)
     if options and options.command:
@@ -147,6 +154,39 @@ def run(configbase, filebase, options, progname):
                 status = diperrors.DIP_NOFILES
             else:
                 status = dip_remove_files(dipdir, options.files, recursive=options.recursive)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
+
+    elif options.command in ["add-attribute", "add-attributes"]:
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            if not options.files:
+                print("No attributes specified for add-attributes to %s"%dipdir, file=sys.stderr)
+                status = diperrors.DIP_NOATTRIBUTES
+            else:
+                status = dip_set_attributes(dipdir, options.files)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
+
+    elif options.command in ["show-attribute", "show-attributes"]:
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            if not options.files:
+                print("No attributes specified for show-attributes from %s"%dipdir, file=sys.stderr)
+                status = diperrors.DIP_NOATTRIBUTES
+            else:
+                status = dip_show_attributes(dipdir, options.files)
+        if status == 0:
+            dip_set_default_dir(configbase, dipdir)
+
+    elif options.command in ["remove-attribute", "remove-attributes"]:
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            if not options.files:
+                print("No attributes specified for remove-attributes from %s"%dipdir, file=sys.stderr)
+                status = diperrors.DIP_NOATTRIBUTES
+            else:
+                status = dip_remove_attributes(dipdir, options.files)
         if status == 0:
             dip_set_default_dir(configbase, dipdir)
 

@@ -122,6 +122,48 @@ Adds specified files to a DIP.  Adds references to the files, and does not creat
 Error if DIP directory does not exist or is not recognisable as a DIP.
 
 
+### Add Dublin Core metadata to a DIP
+
+    dip add-attribute [--dip=<directory>] dc:<name>="<value>" ...
+
+Adds or updates specified Dublin Core metadata attribute(s) to a package.  Quotes around `<value>` are optional if it does not contain spaces or other special characxters.
+
+Allowable values for the attribute `<name>` are:
+
+* `creator` (string) - name of creator
+* `created` (timestamp) - date/time of creation
+* `title` (string) - title of package
+* `identifier` (string) - an identifier for the package
+
+These are an initial set of supported metadata values.  In the longer term, we expect to support a wider range of values, and also a file-based mechanism for providing arbitrary additional metadata about a package and its contents.
+
+
+### Remove Dublin Core metadata
+
+    dip remove-attribute [--dip=<directory>] dc:<name> ...
+
+Removes specified Dublin Core metadata attribute(s) from a package.
+
+Allowable values for the attribute `<name>` are the same as for `add-attribute`.
+
+Exit status `2` if a named attribute is not defined.
+
+
+### Show Dublin Core metadata
+
+    dip show-attribute [--dip=<directory>] dc:<name> ...
+
+Shows specified Dublin Core metadata attribute(s) in a package.  Attribute values are written to standard output, one per line, in the format:
+
+    dc:<name>="value"
+
+This is the same format that can be used on the command line when defining an attribute.
+
+Exit status `2` if a named attribute is not defined.
+
+Allowable values for the attribute `<name>` are the same as for `add-attribute`.
+
+
 ### Add metadata to a DIP
 
     dip add-metadata --format=<meta-format> [--recursive] [--dip=<directory>] file, ...
@@ -139,8 +181,8 @@ Error if DIP directory does not exist or is not recognisable as a DIP.
 
 ### Remove file(s) or metadata from a DIP 
 
-    dip remove-file [--recursive] [--dip=<directory>] file, ...
-    dip remove-metadata [--recursive] [--dip=<directory>] file, ...
+    dip remove-file [--recursive] [--dip=<directory>] file ...
+    dip remove-metadata [--recursive] [--dip=<directory>] file ...
 
 Removes data or metadata from a DIP.
 
