@@ -66,7 +66,7 @@ class TestDipCmd(TestCase):
     def dpath(self, ref):
         return os.path.join(self._dipdir, ref)
 
-    def create_test_dip(self, dipref="testdip"):
+    def create_tst_dip(self, dipref="testdip"):
         dipdir = self.dpath(dipref)
         # create
         argv   = ["dip", "create", "--dip", dipref]
@@ -76,8 +76,8 @@ class TestDipCmd(TestCase):
         self.assertEqual(status, diperrors.DIP_SUCCESS)
         return dipdir
 
-    def create_populate_test_dip(self, dipref="testdip"):
-        dipdir = self.create_test_dip(dipref=dipref)
+    def create_populate_tst_dip(self, dipref="testdip"):
+        dipdir = self.create_tst_dip(dipref=dipref)
         filespath  = self.fpath("files")
         argv   = ["dip", "--recursive", "add-files", filespath]
         outstr = StringIO.StringIO()
@@ -154,7 +154,7 @@ class TestDipCmd(TestCase):
             )
         shutil.rmtree(dipdir)
         # create
-        newdir = self.create_test_dip("testdip")
+        newdir = self.create_tst_dip("testdip")
         self.assertEqual(newdir, dipdir)
         # again...
         argv = ["dip", "use", "--dip", "testdip"]
@@ -174,7 +174,7 @@ class TestDipCmd(TestCase):
 
     def test_03_dip_show(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         # show
         argv   = ["dip", "show"]
         outstr = StringIO.StringIO()
@@ -192,7 +192,7 @@ class TestDipCmd(TestCase):
 
     def test_04_dip_remove(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # show
         argv   = ["dip", "remove", "--dip", "testdip"]
@@ -207,7 +207,7 @@ class TestDipCmd(TestCase):
 
     def test_10_dip_add_file_single(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # add
         file1path = self.fpath("files/file1.txt")
@@ -235,7 +235,7 @@ class TestDipCmd(TestCase):
 
     def test_11_dip_add_files_multi(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # add
         file1path = self.fpath("files/file1.txt")
@@ -273,7 +273,7 @@ class TestDipCmd(TestCase):
 
     def test_12_dip_add_files_recursive(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # add
         filespath  = self.fpath("files")
@@ -323,7 +323,7 @@ class TestDipCmd(TestCase):
 
     def test_13_dip_remove_file_single(self):
         # create
-        dipdir = self.create_populate_test_dip("testdip")
+        dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # Check files present
         self.assertFilesInDip(filespresent=["files/file1.txt", "files/file2.txt"])
@@ -344,7 +344,7 @@ class TestDipCmd(TestCase):
 
     def test_14_dip_remove_file_multiple(self):
         # create
-        dipdir = self.create_populate_test_dip("testdip")
+        dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # Check files present
         self.assertFilesInDip(
@@ -377,7 +377,7 @@ class TestDipCmd(TestCase):
 
     def test_15_dip_remove_file_recursive(self):
         # create
-        dipdir = self.create_populate_test_dip("testdip")
+        dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # Check files present
         self.assertFilesInDip(
@@ -416,7 +416,7 @@ class TestDipCmd(TestCase):
 
     def test_20_dip_add_show_attributes(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # Test attributes
         argvshow   = (
@@ -472,7 +472,7 @@ class TestDipCmd(TestCase):
 
     def test_21_dip_remove_attributes(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # Add attributes
         argvset   = (
@@ -537,7 +537,7 @@ class TestDipCmd(TestCase):
 
     def test_22_dip_update_attributes(self):
         # create
-        dipdir = self.create_test_dip("testdip")
+        dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # Add attributes
         argvset   = (
