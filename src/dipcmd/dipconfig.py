@@ -20,7 +20,18 @@ import logging
 
 log = logging.getLogger(__name__)
 
+from collections        import namedtuple
+
+from dipcmd             import diperrors
+
+SwordService = namedtuple('SwordService', ['servicedoc_uri', 'collection_uri', 'username', 'password'])
+
 CONFIGFILE = "dip_config.json"
+
+def strip_quotes(val):
+    if val and val.startswith('"') and val.endswith('"'):
+        val = val[1:-1]
+    return val
 
 def get_dipdir(dip_config, dir):
     dipdir  = os.path.abspath(dir)
@@ -81,27 +92,114 @@ def resetconfig(configbase):
     writeconfig(configbase, dip_config)
     return
 
+def dip_show_config_item(config, itemname, prefix="", obscure=False):
+    if (itemname in config) and (config[itemname] is not None):
+        itemval = config[itemname]
+        if obscure:
+            itemval = "*"*len(itemval)
+        print('''%s%s="%s"'''%(prefix, itemname, itemval))
+    return
+
+def dip_show_config(configbase, filebase):
+    dip_config     = readconfig(configbase)
+    dip_show_config_item(dip_config, "dipbase")
+    dip_show_config_item(dip_config, "dipdir")
+    if 'collections' in dip_config:
+        for collection_uri in dip_config['collections']:
+            coll_config = dip_config['collections'][collection_uri]
+            dip_show_config_item(dip_config['collections'], "collection_uri")
+            print('''collection_uri="%s"'''%(collection_uri))
+            dip_show_config_item(coll_config, "servicedoc_uri", prefix="  ")
+            dip_show_config_item(coll_config, "username", prefix="  ")
+            dip_show_config_item(coll_config, "password", prefix="  ", obscure=True)
+    return
+
 def dip_get_default_dir(configbase):
     dip_config = readconfig(configbase)
     return dip_config['dipdir']
 
-def dip_set_default_dir(configbase, dipdir):
+def dip_set_default_dir(configbase, filebase, dipdir, display=False):
     dip_config = readconfig(configbase)
-    dip_config.update({'dipdir': dipdir})
+    dip_config.update({'dipbase': filebase, 'dipdir': dipdir})
     writeconfig(configbase, dip_config)
-    return
+    if display:
+        dip_show_config_item(dip_config, "dipbase")
+        dip_show_config_item(dip_config, "dipdir")
+    return diperrors.DIP_SUCCESS
 
 def dip_get_dip_dir(configbase, filebase, options, default=False):
     dip_config = readconfig(configbase)
-    dipref = options.dip
+    dipref     = strip_quotes(options.dip)
     if not dipref and default:
         dipref = dip_config['dipdir']
     if not dipref:
-        print("No directory specieid for DIP", file=sys.stderr)
-        return (2, None)
+        print("No directory specified for DIP", file=sys.stderr)
+        return (diperrors.DIP_NODIPGIVEN, None)
     dipdir = os.path.join(filebase, dipref)
-    dip_config.update({'dipbase': filebase, 'dipdir': dipdir})
+    return (diperrors.DIP_SUCCESS, dipdir)
+
+def dip_get_service_details(configbase, filebase, options, createnew=False):
+    dip_config     = readconfig(configbase)
+    collection_uri = strip_quotes(options.collection_uri)
+    if not collection_uri:
+        print("No SWORD collection specified for deposit", file=sys.stderr)
+        return (diperrors.DIP_NOCOLLECTION, None)
+    if  ( ('collections'  in dip_config) and 
+          (collection_uri in dip_config['collections']) ):
+        svcinfo = dip_config['collections'][collection_uri]
+        ss = SwordService(
+            collection_uri=collection_uri,
+            servicedoc_uri=strip_quotes(options.servicedoc_uri) or svcinfo.get('servicedoc_uri', None),
+            username=strip_quotes(options.username) or svcinfo.get('username', None),
+            password=strip_quotes(options.password) or svcinfo.get('password', None)
+            )
+    elif createnew:
+        ss = SwordService(
+            collection_uri=collection_uri,
+            servicedoc_uri=None,
+            username=None,
+            password=None
+            )
+    else:
+        print("Unknown SWORD collection specified for deposit (use dip config to configure)", file=sys.stderr)
+        return (diperrors.DIP_UNKNOWNCOLL, None)
+    return (diperrors.DIP_SUCCESS, ss)
+
+def dip_save_service_details(configbase, filebase, ss, dip_config=None):
+    collection_uri = ss.collection_uri
+    if dip_config is None:
+        dip_config = readconfig(configbase)
+    if 'collections' not in dip_config:
+        dip_config['collections'] = {}
+    if collection_uri in dip_config['collections']:
+        svcinfo = dip_config['collections'][collection_uri].copy()
+    else:
+        svcinfo = {}
+    if ss.servicedoc_uri:
+        svcinfo['servicedoc_uri'] = ss.servicedoc_uri
+    if ss.username:
+        svcinfo['username'] = ss.username
+    if ss.password:
+        svcinfo['password'] = ss.password
+    dip_config['collections'][collection_uri] = svcinfo
     writeconfig(configbase, dip_config)
-    return (0, dipdir)
+    return diperrors.DIP_SUCCESS
+
+def dip_set_service_details(configbase, filebase, options):
+    dip_config     = readconfig(configbase)
+    collection_uri = strip_quotes(options.collection_uri)
+    if not collection_uri:
+        print("No SWORD collection specified", file=sys.stderr)
+        return (diperrors.DIP_NOCOLLECTION, None)
+    (status, ss) = dip_get_service_details(configbase, filebase, options, createnew=True)
+    if status == diperrors.DIP_SUCCESS:
+        status = dip_save_service_details(configbase, filebase, ss, dip_config=dip_config)
+    if status == diperrors.DIP_SUCCESS:
+        print('''collection_uri="%s"'''%(collection_uri))
+        svcinfo = dip_config['collections'][collection_uri]
+        dip_show_config_item(svcinfo, "servicedoc_uri")
+        dip_show_config_item(svcinfo, "username")
+        dip_show_config_item(svcinfo, "password", obscure=True)
+    return status
 
 # End.

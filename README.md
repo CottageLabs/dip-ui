@@ -199,16 +199,18 @@ Returns name of package file on stdout.
 
 Error if DIP directory does not exist or is not recognisable as a DIP.
 
-@@TODO: Not yet implemented in `dip`
-
 
 ### Deposit DIP to designated repository
 
-    dip deposit [--dip=<directory> | --package=<file>] --endpoint=<collection-uri>
+    dip deposit [--dip=<directory> | --package=<file>] --collection=<collection-uri>
 
-Returns a token that can be used withj `dip status` (below) to obtain progress information about the deposit.  The `--endpoint` option specofies a SWORD collection-URI (corresponding to a Databank silo), which is used as a primary key for accessing otrher information about the target server.  Additional information may be preconfigired (cf. `dip config`) or auto-discovered from the server or other catalogue.
+Returns a token that can be used withj `dip status` (below) to obtain progress information about the deposit.  The `--collection` option specofies a SWORD collection-URI (corresponding to a Databank silo), which is used as a primary key for accessing other information about the target server.  Additional information may be preconfigured (cf. `dip config`) or auto-discovered from the server or other catalogue.
 
 Defaults to current DIP if neither `--dip` or `--package` are specified.
+
+Displays a deposit token on sdout, in the form:
+
+    token=<deposit-token>
 
 Error if DIP directory does not exist or is not recognisable as a DIP, or package file is not a previously created DIP submission package.
 

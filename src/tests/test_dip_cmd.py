@@ -19,6 +19,7 @@ import logging
 import errno
 import StringIO
 import shutil
+import zipfile
 
 log = logging.getLogger(__name__)
 
@@ -34,10 +35,17 @@ print("sys.path[0]: "+sys.path[0])
 
 from dipcmd                 import diperrors
 from dipcmd.dipmain         import runCommand
-from dipcmd.dipconfig       import dip_get_default_dir
+from dipcmd.dipconfig       import SwordService, dip_get_default_dir
 
 from tests.StdoutContext    import SwitchStdout, SwitchStderr
 from tests.SetcwdContext    import ChangeCurrentDir
+
+SSS = SwordService(
+    collection_uri="http://localhost:8080/col-uri/f715c580-f79a-427d-a07f-abdeb99da397",
+    servicedoc_uri="http://localhost:8080/sd-uri",
+    username="sword",
+    password="sword"
+    )
 
 BASE_DIR    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test/data")
 BASE_CONFIG = os.path.join(BASE_DIR, "config")
@@ -104,7 +112,67 @@ class TestDipCmd(TestCase):
 
     # Tests
 
-    def test_01_dip_create(self):
+    def test_01_dip_config_dipdir(self):
+        dipdir = os.path.join(self._dipdir, "testdip")
+        argv = ["dip", "config", "--dip", "testdip"]
+        outstr = StringIO.StringIO()
+        with SwitchStdout(outstr):
+            status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        self.assertEqual(dip_get_default_dir(self._cnfdir), self._dipdir+"/testdip")
+        result = outstr.getvalue()
+        self.assertIn('''dipdir="%s"'''%(dipdir),         result)
+        self.assertIn('''dipbase="%s"'''%(self._dipdir),  result)
+        # Show config
+        argv = ["dip", "config"]
+        outstr = StringIO.StringIO()
+        with SwitchStdout(outstr):
+            status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        self.assertEqual(dip_get_default_dir(self._cnfdir), self._dipdir+"/testdip")
+        result = outstr.getvalue()
+        self.assertIn('''dipdir="%s"'''%(dipdir),         result)
+        self.assertIn('''dipbase="%s"'''%(self._dipdir),  result)
+        return
+
+    def test_02_dip_config_sword_collection(self):
+        dipdir = os.path.join(self._dipdir, "testdip")
+        argv = (
+            [ "dip", "config"
+            , '''--collection_uri="%s"'''%SSS.collection_uri
+            , '''--servicedoc_uri="%s"'''%SSS.servicedoc_uri
+            , '''--username="%s"'''%SSS.username
+            , '''--password="%s"'''%SSS.password
+            ])
+        outstr = StringIO.StringIO()
+        with SwitchStdout(outstr):
+            status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertIn('''collection_uri="%s"'''%(SSS.collection_uri), result)
+        self.assertIn('''servicedoc_uri="%s"'''%(SSS.servicedoc_uri), result)
+        self.assertIn('''username="%s"'''%(SSS.username),             result)
+        self.assertIn('''password="%s"'''%("*"*len(SSS.password)),    result)
+        self.assertNotIn('''dipdir="%s"'''%(dipdir),          result)
+        self.assertNotIn('''dipbase="%s"'''%(self._dipdir),   result)
+        # Show config
+        argv = ["dip", "config"]
+        outstr = StringIO.StringIO()
+        with SwitchStdout(outstr):
+            status = runCommand(self._cnfdir, self._dipdir, argv)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        self.assertEqual(dip_get_default_dir(self._cnfdir), self._dipdir+"/testdip")
+        result = outstr.getvalue()
+        print("========\n%s\n========"%result)
+        self.assertIn('''collection_uri="%s"'''%(SSS.collection_uri), result)
+        self.assertIn('''servicedoc_uri="%s"'''%(SSS.servicedoc_uri), result)
+        self.assertIn('''username="%s"'''%(SSS.username),             result)
+        self.assertIn('''password="%s"'''%("*"*len(SSS.password)),    result)
+        # self.assertNotIn('''dipdir="%s"'''%(dipdir),          result)
+        # self.assertNotIn('''dipbase="%s"'''%(self._dipdir),   result)
+        return
+
+    def test_11_dip_create(self):
         dipdir = os.path.join(self._dipdir, "testdip")
         argv = ["dip", "create", "--dip", "testdip"]
         outstr = StringIO.StringIO()
@@ -129,7 +197,7 @@ class TestDipCmd(TestCase):
             )
         return
 
-    def test_02_dip_use(self):
+    def test_12_dip_use(self):
         dipdir = os.path.join(self._dipdir, "testdip")
         argv = ["dip", "use", "--dip", "testdip"]
         outstr = StringIO.StringIO()
@@ -172,7 +240,7 @@ class TestDipCmd(TestCase):
         self.assertEqual(outstr.getvalue(), "%s\n"%(dipdir))
         return
 
-    def test_03_dip_show(self):
+    def test_13_dip_show(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         # show
@@ -190,7 +258,7 @@ class TestDipCmd(TestCase):
         self.assertIn("Endpoints:", result)
         return
 
-    def test_04_dip_remove(self):
+    def test_14_dip_remove(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -205,7 +273,7 @@ class TestDipCmd(TestCase):
         self.assertFalse(os.path.isdir(dipdir))
         return
 
-    def test_10_dip_add_file_single(self):
+    def test_20_dip_add_file_single(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -233,7 +301,7 @@ class TestDipCmd(TestCase):
         self.assertIn(" %s"%file1path, result)
         return
 
-    def test_11_dip_add_files_multi(self):
+    def test_21_dip_add_files_multi(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -271,7 +339,7 @@ class TestDipCmd(TestCase):
         self.assertIn(" %s"%sub12path, result)
         return
 
-    def test_12_dip_add_files_recursive(self):
+    def test_22_dip_add_files_recursive(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -321,7 +389,7 @@ class TestDipCmd(TestCase):
         self.assertIn(" %s"%sub331path, result)
         return
 
-    def test_13_dip_remove_file_single(self):
+    def test_23_dip_remove_file_single(self):
         # create
         dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -342,7 +410,7 @@ class TestDipCmd(TestCase):
         self.assertFilesInDip(filesabsent=["files/file1.txt"], filespresent=["files/file2.txt"])
         return
 
-    def test_14_dip_remove_file_multiple(self):
+    def test_24_dip_remove_file_multiple(self):
         # create
         dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -375,7 +443,7 @@ class TestDipCmd(TestCase):
             )
         return
 
-    def test_15_dip_remove_file_recursive(self):
+    def test_25_dip_remove_file_recursive(self):
         # create
         dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -414,7 +482,7 @@ class TestDipCmd(TestCase):
             )
         return
 
-    def test_20_dip_add_show_attributes(self):
+    def test_30_dip_add_show_attributes(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -470,7 +538,7 @@ class TestDipCmd(TestCase):
         self.assertIn('''dc:identifier="testdip/123456789"''',    result)
         return
 
-    def test_21_dip_remove_attributes(self):
+    def test_31_dip_remove_attributes(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -535,7 +603,7 @@ class TestDipCmd(TestCase):
         self.assertNotIn('''dc:title="Smith and Jones' package"''', result)
         return
 
-    def test_22_dip_update_attributes(self):
+    def test_32_dip_update_attributes(self):
         # create
         dipdir = self.create_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
@@ -600,6 +668,80 @@ class TestDipCmd(TestCase):
         self.assertIn('''dc:title="Smith and Jones' package"''',    result)
         self.assertIn('''dc:identifier="testdip/123456789"''',      result)
         return
+
+    def test_40_dip_package(self):
+        # create
+        dipdir = self.create_populate_tst_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Create package
+        argvpackage   = (
+            [ "dip", "package", "--dip", "testdip"
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvpackage)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        # Check filename response
+        retext = "("+self._dipdir+r'/testdip/packages/.*/SimpleZip.zip'+")"
+        pathre = re.compile(retext)
+        pathmatch = pathre.search(result)
+        self.assertIsNotNone(pathmatch)
+        pathtext = pathmatch.group(1)
+        # Check zip package contents
+        z = zipfile.ZipFile(pathtext)
+        ziplist = z.namelist()
+        self.assertEqual(len(ziplist), 9)
+        self.assertIn("dcterms.xml",                    ziplist)
+        self.assertIn("files/file1.txt",                ziplist)
+        self.assertIn("files/file2.txt",                ziplist)
+        self.assertIn("files/sub1/sub11.txt",           ziplist)
+        self.assertIn("files/sub1/sub12.txt",           ziplist)
+        self.assertIn("files/sub2/sub21.txt",           ziplist)
+        self.assertIn("files/sub2/sub22.txt",           ziplist)
+        self.assertIn("files/sub3/sub31/sub311.txt",    ziplist)
+        self.assertIn("files/sub3/sub33/sub331.txt",    ziplist)
+        # self.assertIn("file1.txt",      ziplist)
+        # self.assertIn("file2.txt",      ziplist)
+        # self.assertIn("sub11.txt",      ziplist)
+        # self.assertIn("sub12.txt",      ziplist)
+        # self.assertIn("sub21.txt",      ziplist)
+        # self.assertIn("sub22.txt",      ziplist)
+        # self.assertIn("sub311.txt",     ziplist)
+        # self.assertIn("sub331.txt",     ziplist)
+        return
+
+    def test_41_dip_depopsit(self):
+        # create
+        dipdir = self.create_populate_tst_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Configure endpoint
+        argvconfig   = (
+            [ "dip", "config"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            , "--username=%s"%(SSS.username)
+            , "--password=%s"%(SSS.password)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvconfig)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        # Create package and deposit
+        argvdeposit   = (
+            [ "dip", "deposit", "--dip", "testdip"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvdeposit)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertMatch(r'^token=.*$', result)
+        return
+
 
 if __name__ == "__main__":
     import nose

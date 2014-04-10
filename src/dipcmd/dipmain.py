@@ -25,9 +25,12 @@ if __name__ == "__main__":
 
 from dipcmd             import diperrors
 from dipcmd.dipconfig   import dip_get_dip_dir, dip_set_default_dir
+from dipcmd.dipconfig   import dip_set_service_details
+from dipcmd.dipconfig   import dip_show_config
 from dipcmd.diplocal    import dip_create, dip_use, dip_show, dip_remove
 from dipcmd.diplocal    import dip_add_files, dip_remove_files
 from dipcmd.diplocal    import dip_set_attributes, dip_show_attributes, dip_remove_attributes
+from dipcmd.dipdeposit  import dip_package
 
 VERSION = "0.1"
 
@@ -51,14 +54,6 @@ def parseCommandArgs(argv):
                     "On successful deposit of a DIP, its URI is written to standard output."
                     )
                 )
-    parser.add_argument("command", metavar="COMMAND",
-                        nargs=None,
-                        help="sub-command, which is one of: "+
-                             "create, use, show, remove-dip, "+
-                             "add-files, add-metadata, remove-file, "+
-                             "add-attribute, show-attribute, remove-attribute, "+
-                             "package, deposit"
-                       )
     parser.add_argument('--version', action='version', version='%(prog)s '+VERSION)
     parser.add_argument("-d", "--dip",
                         dest="dip", metavar="DIP",
@@ -68,6 +63,22 @@ def parseCommandArgs(argv):
                         dest="package", metavar="PACKAGE",
                         default=None,
                         help="Package for deposit (or other operation...)")
+    parser.add_argument("-c", "--collection_uri",
+                        dest="collection_uri", metavar="COLLECTON_URI",
+                        default=None,
+                        help="Collection URI for deposit")
+    parser.add_argument("-s", "--servicedoc_uri",
+                        dest="servicedoc_uri", metavar="SERVICEDOC_URI",
+                        default=None,
+                        help="SWORD (AtomPub) service document")
+    parser.add_argument("-u", "--username",
+                        dest="username", metavar="USERNAME",
+                        default=None,
+                        help="Username to use for deposit (saved per-collection)")
+    parser.add_argument("-w", "--password",
+                        dest="password", metavar="PASSWORD",
+                        default=None,
+                        help="Password to use for deposit (saved per-collection)")
     parser.add_argument("-r", "--recursive",
                         action="store_true", 
                         dest="recursive", 
@@ -78,6 +89,14 @@ def parseCommandArgs(argv):
                         dest="debug", 
                         default=False,
                         help="Run with full debug output enabled")
+    parser.add_argument("command", metavar="COMMAND",
+                        nargs=None,
+                        help="sub-command, which is one of: "+
+                             "create, use, show, remove-dip, "+
+                             "add-files, add-metadata, remove-file, "+
+                             "add-attribute, show-attribute, remove-attribute, "+
+                             "package, deposit"
+                       )
     parser.add_argument("files", metavar="FILES",
                         nargs="*",
                         help="Zero, one or more files that are added to a DIP "+
@@ -101,36 +120,45 @@ def run(configbase, filebase, options, progname):
     """
     status = diperrors.DIP_SUCCESS
 
-    if options.command == "config":
-        raise NotImplementedError("@@TODO config")
+    if options.command in ["config", "configure"]:
+        # dip_config = readconfig(configbase)
+        if (options.dip or options.collection_uri):
+            if options.dip:
+                (status, dipdir) = dip_get_dip_dir(configbase, filebase, options)
+            if options.collection_uri:
+                status = dip_set_service_details(configbase, filebase, options)
+        else:
+            dip_show_config(configbase, filebase)
+        if options.dip and status == 0:
+            status = dip_set_default_dir(configbase, filebase, dipdir, display=True)
 
-    if options.command == "create":
+    elif options.command == "create":
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options)
         if status == 0:
             status = dip_create(dipdir)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command == "use":
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
         if status == 0:
             status = dip_use(dipdir)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command == "show":
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
         if status == 0:
             status = dip_show(dipdir)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command == "remove":
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=False)
         if status == 0:
             status = dip_remove(dipdir)
         if status == 0:
-            dip_set_default_dir(configbase, None)
+            dip_set_default_dir(configbase, filebase, None)
 
     elif options.command in ["add-file","add-files"]:
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
@@ -141,7 +169,7 @@ def run(configbase, filebase, options, progname):
             else:
                 status = dip_add_files(dipdir, options.files, recursive=options.recursive)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command == "add-metadata":
         raise NotImplementedError("@@TODO add-metadata")
@@ -155,7 +183,7 @@ def run(configbase, filebase, options, progname):
             else:
                 status = dip_remove_files(dipdir, options.files, recursive=options.recursive)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command in ["add-attribute", "add-attributes"]:
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
@@ -166,7 +194,7 @@ def run(configbase, filebase, options, progname):
             else:
                 status = dip_set_attributes(dipdir, options.files)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command in ["show-attribute", "show-attributes"]:
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
@@ -177,7 +205,7 @@ def run(configbase, filebase, options, progname):
             else:
                 status = dip_show_attributes(dipdir, options.files)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command in ["remove-attribute", "remove-attributes"]:
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
@@ -188,13 +216,23 @@ def run(configbase, filebase, options, progname):
             else:
                 status = dip_remove_attributes(dipdir, options.files)
         if status == 0:
-            dip_set_default_dir(configbase, dipdir)
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command == "package":
-        raise NotImplementedError("@@TODO package")
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            # @@TODO: add format option
+            status = dip_package(dipdir, basedir=os.getcwd())
+        if status == 0:
+            dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command == "deposit":
         raise NotImplementedError("@@TODO deposit")
+        # def dip_deposit(
+        #             dipdir,
+        #             collection_uri=None, servicedoc_uri=None, username=None, password=None,
+        #             package="http://purl.org/net/sword/package/SimpleZip"
+        #             ):
 
     else:
         print("Un-recognised sub-command: %s"%(options.command), file=sys.stderr)
