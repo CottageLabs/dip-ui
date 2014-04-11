@@ -713,7 +713,7 @@ class TestDipCmd(TestCase):
         # self.assertIn("sub331.txt",     ziplist)
         return
 
-    def test_41_dip_depopsit(self):
+    def test_41_dip_deposit(self):
         # create
         dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))

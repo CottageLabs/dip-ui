@@ -59,6 +59,10 @@ def dip_deposit(
         return diperrors.DIP_NOPASSWORD
     d = dip.DIP(dipdir)
     print("Depositing deposit information package at %s"%dipdir)
+    print("  collection_uri=%s"%collection_uri)
+    print("  servicedoc_uri=%s"%servicedoc_uri)
+    print("  username=%s"%username)
+    print("  password=%s"%password)
     sss = dip.Endpoint(
         col_iri=collection_uri, 
         sd_iri=servicedoc_uri, 
