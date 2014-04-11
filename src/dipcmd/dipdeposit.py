@@ -39,7 +39,7 @@ def dip_package(dipdir, basedir=None, format="http://purl.org/net/sword/package/
     if status != diperrors.DIP_SUCCESS:
         return status
     d = dip.DIP(dipdir)
-    print("Deposit information package at %s"%dipdir)
+    print("Packaging deposit information package at %s"%dipdir)
     z = d.package(package_format=format, basedir=basedir)
     print(z)
     return diperrors.DIP_SUCCESS
@@ -47,24 +47,26 @@ def dip_package(dipdir, basedir=None, format="http://purl.org/net/sword/package/
 def dip_deposit(
             dipdir,
             collection_uri=None, servicedoc_uri=None, username=None, password=None,
-            package="http://purl.org/net/sword/package/SimpleZip"
+            basedir=None, format="http://purl.org/net/sword/package/SimpleZip"
             ):
-        if not servicedoc_uri:
-            raise ValueError("@@TODO - service document discovery")
-        if not username:
-            print("No username provided for deposit operation", file=sys.stderr)
-            return diperrors.DIP_NOUSERNAME
-        if not password:
-            print("No password provided for deposit operation", file=sys.stderr)
-            return diperrors.DIP_NOPASSWORD
-        sss = dip.Endpoint(
-            col_iri=collection_uri, 
-            sd_iri=servicedoc_uri, 
-            username=username,
-            package=package
-            )
-        d.set_endpoint(endpoint=sss)
-        d.deposit(sss.id, user_pass=password)
-        return diperrors.DIP_SUCCESS
+    if not servicedoc_uri:
+        raise ValueError("@@TODO - service document discovery")
+    if not username:
+        print("No username provided for deposit operation", file=sys.stderr)
+        return diperrors.DIP_NOUSERNAME
+    if not password:
+        print("No password provided for deposit operation", file=sys.stderr)
+        return diperrors.DIP_NOPASSWORD
+    d = dip.DIP(dipdir)
+    print("Depositing deposit information package at %s"%dipdir)
+    sss = dip.Endpoint(
+        col_iri=collection_uri, 
+        sd_iri=servicedoc_uri, 
+        username=username,
+        package=format
+        )
+    d.set_endpoint(endpoint=sss)
+    d.deposit(sss.id, user_pass=password, basedir=basedir)
+    return diperrors.DIP_SUCCESS
 
 # End.

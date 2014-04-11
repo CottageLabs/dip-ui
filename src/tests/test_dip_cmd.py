@@ -40,11 +40,11 @@ from dipcmd.dipconfig       import SwordService, dip_get_default_dir
 from tests.StdoutContext    import SwitchStdout, SwitchStderr
 from tests.SetcwdContext    import ChangeCurrentDir
 
-SSS = SwordService(
-    collection_uri="http://localhost:8080/col-uri/f715c580-f79a-427d-a07f-abdeb99da397",
-    servicedoc_uri="http://localhost:8080/sd-uri",
-    username="sword",
-    password="sword"
+DSS = SwordService(
+    collection_uri="http://test-databank.oerc.ox.ac.uk/dip-test",
+    servicedoc_uri="http://test-databank.oerc.ox.ac.uk/swordv2/service-document",
+    username="dip-test",
+    password="sword-access"
     )
 
 BASE_DIR    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test/data")
@@ -139,20 +139,21 @@ class TestDipCmd(TestCase):
         dipdir = os.path.join(self._dipdir, "testdip")
         argv = (
             [ "dip", "config"
-            , '''--collection_uri="%s"'''%SSS.collection_uri
-            , '''--servicedoc_uri="%s"'''%SSS.servicedoc_uri
-            , '''--username="%s"'''%SSS.username
-            , '''--password="%s"'''%SSS.password
+            , '''--collection_uri="%s"'''%DSS.collection_uri
+            , '''--servicedoc_uri="%s"'''%DSS.servicedoc_uri
+            , '''--username="%s"'''%DSS.username
+            , '''--password="%s"'''%DSS.password
             ])
         outstr = StringIO.StringIO()
         with SwitchStdout(outstr):
             status = runCommand(self._cnfdir, self._dipdir, argv)
         self.assertEqual(status, diperrors.DIP_SUCCESS)
         result = outstr.getvalue()
-        self.assertIn('''collection_uri="%s"'''%(SSS.collection_uri), result)
-        self.assertIn('''servicedoc_uri="%s"'''%(SSS.servicedoc_uri), result)
-        self.assertIn('''username="%s"'''%(SSS.username),             result)
-        self.assertIn('''password="%s"'''%("*"*len(SSS.password)),    result)
+        # print("========\n%s\n========"%result)
+        self.assertIn('''collection_uri="%s"'''%(DSS.collection_uri), result)
+        self.assertIn('''servicedoc_uri="%s"'''%(DSS.servicedoc_uri), result)
+        self.assertIn('''username="%s"'''%(DSS.username),             result)
+        self.assertIn('''password="%s"'''%("*"*len(DSS.password)),    result)
         self.assertNotIn('''dipdir="%s"'''%(dipdir),          result)
         self.assertNotIn('''dipbase="%s"'''%(self._dipdir),   result)
         # Show config
@@ -163,11 +164,11 @@ class TestDipCmd(TestCase):
         self.assertEqual(status, diperrors.DIP_SUCCESS)
         self.assertEqual(dip_get_default_dir(self._cnfdir), self._dipdir+"/testdip")
         result = outstr.getvalue()
-        print("========\n%s\n========"%result)
-        self.assertIn('''collection_uri="%s"'''%(SSS.collection_uri), result)
-        self.assertIn('''servicedoc_uri="%s"'''%(SSS.servicedoc_uri), result)
-        self.assertIn('''username="%s"'''%(SSS.username),             result)
-        self.assertIn('''password="%s"'''%("*"*len(SSS.password)),    result)
+        # print("========\n%s\n========"%result)
+        self.assertIn('''collection_uri="%s"'''%(DSS.collection_uri), result)
+        self.assertIn('''servicedoc_uri="%s"'''%(DSS.servicedoc_uri), result)
+        self.assertIn('''username="%s"'''%(DSS.username),             result)
+        self.assertIn('''password="%s"'''%("*"*len(DSS.password)),    result)
         # self.assertNotIn('''dipdir="%s"'''%(dipdir),          result)
         # self.assertNotIn('''dipbase="%s"'''%(self._dipdir),   result)
         return
@@ -719,9 +720,9 @@ class TestDipCmd(TestCase):
         # Configure endpoint
         argvconfig   = (
             [ "dip", "config"
-            , "--collection_uri=%s"%(SSS.collection_uri)
-            , "--username=%s"%(SSS.username)
-            , "--password=%s"%(SSS.password)
+            , "--collection_uri=%s"%(DSS.collection_uri)
+            , "--username=%s"%(DSS.username)
+            , "--password=%s"%(DSS.password)
             ])
         outstr = StringIO.StringIO()
         with ChangeCurrentDir(BASE_DIR):
@@ -731,7 +732,7 @@ class TestDipCmd(TestCase):
         # Create package and deposit
         argvdeposit   = (
             [ "dip", "deposit", "--dip", "testdip"
-            , "--collection_uri=%s"%(SSS.collection_uri)
+            , "--collection_uri=%s"%(DSS.collection_uri)
             ])
         outstr = StringIO.StringIO()
         with ChangeCurrentDir(BASE_DIR):

@@ -25,12 +25,12 @@ if __name__ == "__main__":
 
 from dipcmd             import diperrors
 from dipcmd.dipconfig   import dip_get_dip_dir, dip_set_default_dir
-from dipcmd.dipconfig   import dip_set_service_details
+from dipcmd.dipconfig   import dip_get_service_details, dip_set_service_details
 from dipcmd.dipconfig   import dip_show_config
 from dipcmd.diplocal    import dip_create, dip_use, dip_show, dip_remove
 from dipcmd.diplocal    import dip_add_files, dip_remove_files
 from dipcmd.diplocal    import dip_set_attributes, dip_show_attributes, dip_remove_attributes
-from dipcmd.dipdeposit  import dip_package
+from dipcmd.dipdeposit  import dip_package, dip_deposit
 
 VERSION = "0.1"
 
@@ -227,12 +227,20 @@ def run(configbase, filebase, options, progname):
             dip_set_default_dir(configbase, filebase, dipdir)
 
     elif options.command == "deposit":
-        raise NotImplementedError("@@TODO deposit")
-        # def dip_deposit(
-        #             dipdir,
-        #             collection_uri=None, servicedoc_uri=None, username=None, password=None,
-        #             package="http://purl.org/net/sword/package/SimpleZip"
-        #             ):
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            (status, ss) = dip_get_service_details(configbase, filebase, options)
+        if status == 0:
+            # @@TODO: add format option
+            status = dip_deposit(
+                dipdir, 
+                collection_uri=ss.collection_uri, servicedoc_uri=ss.servicedoc_uri, 
+                username=ss.username, password=ss.password,
+                basedir=os.getcwd()
+                )
+        if status == 0:
+            dip_set_default_dir(configbase, filebase, dipdir)
+            dip_save_service_details(configbase, filebase, ss)
 
     else:
         print("Un-recognised sub-command: %s"%(options.command), file=sys.stderr)
