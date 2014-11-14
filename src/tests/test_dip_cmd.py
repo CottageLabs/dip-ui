@@ -15,15 +15,14 @@ import os
 import os.path
 import re
 import argparse
-import logging
 import errno
 import StringIO
 import shutil
 import zipfile
+import unittest
 
+import logging
 log = logging.getLogger(__name__)
-
-from unittest   import TestCase
 
 from dip.dip    import DIP
 
@@ -40,6 +39,15 @@ from dipcmd.dipconfig       import SwordService, dip_get_default_dir
 from tests.StdoutContext    import SwitchStdout, SwitchStderr
 from tests.SetcwdContext    import ChangeCurrentDir
 
+# This may need to be adjusted to reflect a collection URI offered by the local Sword server
+# Browse http://localhost:8080/ or http://localhost:8080/sd-uri for candidates
+SSS = SwordService(
+    collection_uri="http://localhost:8080/col-uri/02cbab10-c995-41c9-8ff5-8bebc225e082",
+    servicedoc_uri="http://localhost:8080/sd-uri",
+    username="sword",
+    password="sword"
+    )
+
 DSS = SwordService(
     collection_uri="http://test-databank.oerc.ox.ac.uk/dip-test",
     servicedoc_uri="http://test-databank.oerc.ox.ac.uk/swordv2/service-document",
@@ -51,7 +59,7 @@ BASE_DIR    = os.path.join(os.path.dirname(os.path.abspath(__file__)), "test/dat
 BASE_CONFIG = os.path.join(BASE_DIR, "config")
 BASE_DIPDIR = os.path.join(BASE_DIR, "dipdir")
 
-class TestDipCmd(TestCase):
+class TestDipCmd(unittest.TestCase):
 
     def setUp(self):
         self._dipdir = BASE_DIPDIR
@@ -713,6 +721,7 @@ class TestDipCmd(TestCase):
         # self.assertIn("sub331.txt",     ziplist)
         return
 
+    @unittest.skip("@@TODO: databank deposit problems to resolve")
     def test_41_dip_deposit(self):
         # create
         dipdir = self.create_populate_tst_dip("testdip")
@@ -721,6 +730,7 @@ class TestDipCmd(TestCase):
         argvconfig   = (
             [ "dip", "config"
             , "--collection_uri=%s"%(DSS.collection_uri)
+            , "--servicedoc_uri=%s"%DSS.servicedoc_uri
             , "--username=%s"%(DSS.username)
             , "--password=%s"%(DSS.password)
             ])
@@ -743,6 +753,36 @@ class TestDipCmd(TestCase):
         self.assertMatch(r'^token=.*$', result)
         return
 
+    def test_42_dip_deposit_sss(self):
+        # create
+        dipdir = self.create_populate_tst_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Configure endpoint
+        argvconfig   = (
+            [ "dip", "config"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            , "--servicedoc_uri=%s"%(SSS.servicedoc_uri)
+            , "--username=%s"%(SSS.username)
+            , "--password=%s"%(SSS.password)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvconfig)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        # Create package and deposit
+        argvdeposit   = (
+            [ "dip", "deposit", "--dip", "testdip"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvdeposit)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertRegexpMatches(result, r'^token=.*$')
+        return
 
 if __name__ == "__main__":
     import nose

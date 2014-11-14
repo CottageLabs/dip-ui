@@ -58,6 +58,8 @@ def readconfig(configbase):
     try:
         with open(configfilename(configbase), 'r') as configfile:
             dip_config = json.load(configfile)
+            # log.debug("readconfig: %s"%(configfilename(configbase)))
+            # log.debug("dip_config: %s"%([dip_config]))
     except IOError as exc: # Python >2.5
         if exc.errno == errno.ENOENT:
             pass    # Ignore file not exists for now
@@ -147,6 +149,7 @@ def dip_get_service_details(configbase, filebase, options, createnew=False):
     if  ( ('collections'  in dip_config) and 
           (collection_uri in dip_config['collections']) ):
         svcinfo = dip_config['collections'][collection_uri]
+        # log.debug("svcinfo for %s: %r"%(collection_uri, dip_config['collections']))
         ss = SwordService(
             collection_uri=collection_uri,
             servicedoc_uri=strip_quotes(options.servicedoc_uri) or svcinfo.get('servicedoc_uri', None),

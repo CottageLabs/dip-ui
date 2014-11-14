@@ -25,7 +25,7 @@ if __name__ == "__main__":
 
 from dipcmd             import diperrors
 from dipcmd.dipconfig   import dip_get_dip_dir, dip_set_default_dir
-from dipcmd.dipconfig   import dip_get_service_details, dip_set_service_details
+from dipcmd.dipconfig   import dip_get_service_details, dip_set_service_details, dip_save_service_details
 from dipcmd.dipconfig   import dip_show_config
 from dipcmd.diplocal    import dip_create, dip_use, dip_show, dip_remove
 from dipcmd.diplocal    import dip_add_files, dip_remove_files
@@ -230,6 +230,7 @@ def run(configbase, filebase, options, progname):
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
         if status == 0:
             (status, ss) = dip_get_service_details(configbase, filebase, options)
+            # log.info("ss: %r"%([ss]))
         if status == 0:
             # @@TODO: add format option
             status = dip_deposit(
@@ -261,8 +262,8 @@ def runCommand(configbase, filebase, argv):
     options = parseCommandArgs(argv[1:])
     if options and options.debug:
         logging.basicConfig(level=logging.DEBUG)
-    log.debug("runCommand: configbase %s, filebase %s, argv %s"%(configbase, filebase, repr(argv)))
-    log.debug("Options: %s"%(repr(options)))
+    # log.debug("runCommand: configbase %s, filebase %s, argv %s"%(configbase, filebase, repr(argv)))
+    # log.debug("Options: %s"%(repr(options)))
     # else:
     #     logging.basicConfig()
     if options:

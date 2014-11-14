@@ -137,7 +137,7 @@ def dip_visit_files(basedir, filepath, scan, recursive, visitfn):
     Returns diperrors.DIP_SUCCESS, or the value from the first visitor function
     call that does not return return diperrors.DIP_SUCCESS.
     """
-    log.debug("dip_visit_files: %s, %s"%(basedir, filepath))
+    # log.debug("dip_visit_files: %s, %s"%(basedir, filepath))
     p = os.path.join(basedir, filepath)
     if os.path.isdir(p):
         if scan:

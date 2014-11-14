@@ -24,9 +24,13 @@ Instructions assume starting with current directory being the root of the dip-ui
         virtualenv dipenv
         . dipenv/bin/activate
 
-2. Install lxml (used by `dip`, but not imnstalled as dependency):
+2. Install lxml (used by `dip`, but not installed as dependency):
 
         pip install lxml
+
+    or, if that fails:
+
+        CPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/usr/include/libxml2 pip install lxml==2.3.4
 
 3. Install `dip`.  I am assuming dip repository is in sibling directory of `dip-ui` project.
 
@@ -204,7 +208,7 @@ Error if DIP directory does not exist or is not recognisable as a DIP.
 
     dip deposit [--dip=<directory> | --package=<file>] --collection=<collection-uri>
 
-Returns a token that can be used withj `dip status` (below) to obtain progress information about the deposit.  The `--collection` option specofies a SWORD collection-URI (corresponding to a Databank silo), which is used as a primary key for accessing other information about the target server.  Additional information may be preconfigured (cf. `dip config`) or auto-discovered from the server or other catalogue.
+Returns a token that can be used withj `dip status` (below) to obtain progress information about the deposit.  The `--collection` option specifies a SWORD collection-URI (corresponding to a Databank silo), which is used as a primary key for accessing other information about the target server.  Additional information may be preconfigured (cf. `dip config`) or auto-discovered from the server or other catalogue.
 
 Defaults to current DIP if neither `--dip` or `--package` are specified.
 
@@ -213,8 +217,6 @@ Displays a deposit token on sdout, in the form:
     token=<deposit-token>
 
 Error if DIP directory does not exist or is not recognisable as a DIP, or package file is not a previously created DIP submission package.
-
-@@TODO: Not fully implemented in `dip` (metadata only?)
 
 
 ### Check status of deposit
@@ -230,6 +232,4 @@ Exit status:
 * 64 or greater: deposit failed.
 
 (cf. http://stackoverflow.com/questions/1101957/are-there-any-standard-exit-status-codes-in-linux)
-
-@@TODO: Not fully implemented in `dip` (metadata only?)
 
