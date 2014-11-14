@@ -25,3 +25,5 @@ DIP_UNKNOWNATTR     = 71    # Unknown attribute name
 DIP_NODIPGIVEN      = 72    # No DIP directory specified or available
 DIP_NOCOLLECTION    = 73    # SWORD collection specified for deposit
 DIP_UNKNOWNCOLL     = 74    # Unknown SWORD collection specified 
+DIP_NOUSERNAME      = 75    # No username specified (command line or config?)
+DIP_NOPASSWORD      = 76    # No password specified (command line or config?)

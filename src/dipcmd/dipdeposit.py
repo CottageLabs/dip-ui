@@ -70,7 +70,62 @@ def dip_deposit(
         package=format
         )
     d.set_endpoint(endpoint=sss)
-    d.deposit(sss.id, user_pass=password, basedir=basedir)
+    # See: https://github.com/CottageLabs/dip/blob/master/tests/test_sss.py#L145
+    cm, dr = d.deposit(sss.id, user_pass=password, basedir=basedir)
+    # print("********\n")
+    # print(format_CommsMeta(cm))
+    # print("********\n")
+    # print(format_DepositReceipt(dr))
+    # print("********\n")
+    print("token=%s"%(dr.id))
     return diperrors.DIP_SUCCESS
+
+def format_CommsMeta(cm):
+    txt    = "CommsMeta("
+    fields = (
+        ("method",          cm.method),
+        ("request_url",     cm.request_url),
+        ("response_code",   cm.response_code),
+        ("username",        cm.username),
+        # ("password",        cm.password),
+        ("auth_type",       cm.auth_type),
+        ("headers",         cm.headers)
+        )
+    sep= ""
+    for label, value in fields:
+        if value:
+            txt += "%s%s=%s"%(sep, label, value)
+            sep = ", "
+    txt += ")"
+    return txt
+
+def format_DepositReceipt(dr):
+    txt    = "DepositReceipt("
+    fields = (
+        ("title",               dr.title),
+        ("id",                  dr.id),
+        ("updated",             dr.updated),
+        ("summary",             dr.summary),
+        ("categories",          dr.categories),
+        ("edit",                dr.edit),
+        # ("edit_media",          dr.edit_media),
+        # ("edit_media_feed",     dr.edit_media_feed),
+        # ("alternate",           dr.alternate),
+        # ("se_iri",              dr.se_iri),
+        # ("cont_iri",            dr.cont_iri),
+        # ("content",             dr.content),
+        # ("links",               dr.links),
+        # ("metadata",            dr.metadata),
+        # ("packaging",           dr.packaging),
+        # ("response_headers",    dr.response_headers),
+        ("location",            dr.location)
+        )
+    sep= "\n    "
+    for label, value in fields:
+        if value:
+            txt += "%s%s=%s"%(sep, label, value)
+            sep = ",\n    "
+    txt += "\n    )"
+    return txt
 
 # End.
