@@ -16,11 +16,11 @@ and it seemed to work.
 
 With `Simple-Sword-Server` source code project cloned from github:
 
-    *pyenv*/bin/activate
+    . *pyenv*/bin/activate
     python setup.py build
     python setup.py install
 
-(where *pyenv* is the Python virtual environment used to run SSS)
+(where `*pyenv*` is the Python virtual environment used to run SSS)
 
 # Running Simple-Sword-Server
 
