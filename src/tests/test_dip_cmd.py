@@ -754,7 +754,7 @@ class TestDipCmd(unittest.TestCase):
         return
 
     def test_42_dip_deposit_sss(self):
-        # create
+        # deposit as single operation
         dipdir = self.create_populate_tst_dip("testdip")
         self.assertTrue(os.path.isdir(dipdir))
         # Configure endpoint
@@ -773,6 +773,51 @@ class TestDipCmd(unittest.TestCase):
         # Create package and deposit
         argvdeposit   = (
             [ "dip", "deposit", "--dip", "testdip"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvdeposit)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        result = outstr.getvalue()
+        self.assertRegexpMatches(result, r'^token=.*$')
+        return
+
+    def test_43_dip_package_deposit_sss(self):
+        # create package and deposit as separate optarations
+        dipdir = self.create_populate_tst_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Configure endpoint
+        argvconfig   = (
+            [ "dip", "config"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            , "--servicedoc_uri=%s"%(SSS.servicedoc_uri)
+            , "--username=%s"%(SSS.username)
+            , "--password=%s"%(SSS.password)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvconfig)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+
+        # Create package
+        argvdeposit   = (
+            [ "dip", "package", "--dip", "testdip"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvdeposit)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        package = outstr.getvalue()
+        log.info("package: %s"%(package))
+
+        # Deposit package
+        argvdeposit   = (
+            [ "dip", "deposit", "--package", package
             , "--collection_uri=%s"%(SSS.collection_uri)
             ])
         outstr = StringIO.StringIO()
