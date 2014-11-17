@@ -30,7 +30,7 @@ from dipcmd.dipconfig   import dip_show_config
 from dipcmd.diplocal    import dip_create, dip_use, dip_show, dip_remove
 from dipcmd.diplocal    import dip_add_files, dip_remove_files
 from dipcmd.diplocal    import dip_set_attributes, dip_show_attributes, dip_remove_attributes
-from dipcmd.dipdeposit  import dip_package, dip_deposit
+from dipcmd.dipdeposit  import dip_package, dip_deposit, dip_status
 
 VERSION = "0.1"
 
@@ -79,6 +79,10 @@ def parseCommandArgs(argv):
                         dest="password", metavar="PASSWORD",
                         default=None,
                         help="Password to use for deposit (saved per-collection)")
+    parser.add_argument("-t", "--token",
+                        dest="token", metavar="DEPOSIT_TOKEN",
+                        default=None,
+                        help="SWORD deposit token (for status command)")
     parser.add_argument("-r", "--recursive",
                         action="store_true", 
                         dest="recursive", 
@@ -95,9 +99,9 @@ def parseCommandArgs(argv):
                              "create, use, show, remove-dip, "+
                              "add-files, add-metadata, remove-file, "+
                              "add-attribute, show-attribute, remove-attribute, "+
-                             "package, deposit"
+                             "package, deposit, status"
                        )
-    parser.add_argument("files", metavar="FILES",
+    parser.add_argument("files", metavar="FILES_OR_ATTRIBUTES",
                         nargs="*",
                         help="Zero, one or more files that are added to a DIP "+
                              "(add-files and add-metadata sub-commands only).\n"+
@@ -230,7 +234,7 @@ def run(configbase, filebase, options, progname):
         (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
         if status == 0:
             (status, ss) = dip_get_service_details(configbase, filebase, options)
-            # log.info("ss: %r"%([ss]))
+            log.info("ss: %r"%([ss]))
         if status == 0:
             # @@TODO: add format option
             status = dip_deposit(
@@ -239,6 +243,21 @@ def run(configbase, filebase, options, progname):
                 username=ss.username, password=ss.password,
                 basedir=os.getcwd()
                 )
+        if status == 0:
+            dip_set_default_dir(configbase, filebase, dipdir)
+            dip_save_service_details(configbase, filebase, ss)
+
+    elif options.command == "status":
+        (status, dipdir) = dip_get_dip_dir(configbase, filebase, options, default=True)
+        if status == 0:
+            (status, ss) = dip_get_service_details(configbase, filebase, options)
+        if status == 0:
+            token = options.token
+            if not token:
+                print("No token specified for status %s"%dipdir, file=sys.stderr)
+                status = diperrors.DIP_NOTOKEN
+        if status == 0:
+            status = dip_status(dipdir, token, collection_uri=ss.collection_uri)
         if status == 0:
             dip_set_default_dir(configbase, filebase, dipdir)
             dip_save_service_details(configbase, filebase, ss)

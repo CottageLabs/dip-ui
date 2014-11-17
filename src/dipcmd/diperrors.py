@@ -27,3 +27,5 @@ DIP_NOCOLLECTION    = 73    # SWORD collection specified for deposit
 DIP_UNKNOWNCOLL     = 74    # Unknown SWORD collection specified 
 DIP_NOUSERNAME      = 75    # No username specified (command line or config?)
 DIP_NOPASSWORD      = 76    # No password specified (command line or config?)
+DIP_NOTOKEN         = 77    # No token specified for status query
+DIP_DEPOSITFAIL     = 78    # Deposit operation rejected by server

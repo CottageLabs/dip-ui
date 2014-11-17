@@ -10,7 +10,7 @@ Deposit information package user interfaces
     cd $BASEDIR
     git clone git@github.com:CottageLabs/dip-ui.git
 
-@@TODO: provide proper setup.py; create virtalenv for installation; etc./
+@@TODO: provide proper setup.py; create virtalenv for installation; etc.
 
 ### Testing
 
@@ -69,18 +69,27 @@ The `dip package` and `dip deposit` commands could (almost) equivalently be just
     dip deposit
 
 
-### dip config ...
+### dip config
 
-Sets configuration options
+Sets configuration options, which are stored localy in `~/.dip_ui/dip_config.json` (or equivalent per-user configuration file directory).
 
-@@TODO
+    dip config --collection_uri=<collection_uri> \
+        [ --servicedoc_uri=<servicedoc_uri> ] \
+        [ --username=<username> ] \
+        [ --password=<password> ] \
+        [ --dip=<dip_directory> ]
 
-Details TBD.
+The main purpose of this is to establish default parameters for sword collections.
 
-    user?
-    dip directory?
+If `<dip_directory>` is given, it establishes a default directory for subserquent commands.
 
-The main purpose of this will probably be to establish parameters for sword collections.
+The `<collection_uri>` parameter is required, and specifies a collection for which access parameters are being defined.
+
+If `<servicedoc_uri>` is given, if updates the service document for the Sword endpoint associated with the speciofied collection.
+
+If `<username>` is given, it updates the user name used to access the specified collection.
+
+If `<password>` is given, it updates the password used to access the specified collection.
 
 
 ### Create empty DIP

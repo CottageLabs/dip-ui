@@ -101,7 +101,7 @@ def dip_show(dipdir):
     print("Endpoints:")
     eps = d.get_endpoints()
     for ep in eps:
-        print("  %s"%ep)
+        print(format_endpoint(ep))
 
     return diperrors.DIP_SUCCESS
 
@@ -332,5 +332,28 @@ def dip_remove_attributes(dipdir, attrs):
         avals = d.remove_dublin_core(dcterm=aterm)
         print('''  %s'''%(aname))
     return diperrors.DIP_SUCCESS
+
+def format_endpoint(ep):
+    txt    = "Endpoint"
+    fields = (
+        ("id",          ep.id),
+        ("sd_iri",      ep.sd_iri),
+        ("col_iri",     ep.col_iri),
+        ("edit_iri",    ep.edit_iri),
+        ("package",     ep.package),
+        ("username",    ep.username),
+        ("onbehalfof",  ep.obo)
+        )
+    txt += " %s %s"%(fields[0])
+    for field in fields[1:]:
+        if field[1]:
+            txt += "\n    %s: %s"%(field)
+    # sep= "("
+    # for label, value in fields:
+    #     if value:
+    #         txt += "%s%s=%s"%(sep, label, value)
+    #         sep = ", "
+    # txt += ")"
+    return txt
 
 # End.

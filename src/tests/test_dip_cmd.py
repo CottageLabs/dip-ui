@@ -695,6 +695,8 @@ class TestDipCmd(unittest.TestCase):
         # Check filename response
         retext = "("+self._dipdir+r'/testdip/packages/.*/SimpleZip.zip'+")"
         pathre = re.compile(retext)
+        log.info("Path result string: %s"%(result))
+        log.info("Path search pattern: %s"%(retext))
         pathmatch = pathre.search(result)
         self.assertIsNotNone(pathmatch)
         pathtext = pathmatch.group(1)
@@ -779,8 +781,9 @@ class TestDipCmd(unittest.TestCase):
         with ChangeCurrentDir(BASE_DIR):
             with SwitchStdout(outstr):
                 status = runCommand(self._cnfdir, self._dipdir, argvdeposit)
-        self.assertEqual(status, diperrors.DIP_SUCCESS)
         result = outstr.getvalue()
+        log.info(result)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
         self.assertRegexpMatches(result, r'^token=.*$')
         return
 

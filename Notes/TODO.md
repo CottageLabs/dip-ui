@@ -10,6 +10,7 @@
 - [ ] How to query status of previous deposit - need to save details locally, or can use SSS? 
 - [ ] Test against Databank
 - [ ] Metadata?
+- [ ] setup.py
 
 
 ## Commands for manual testing

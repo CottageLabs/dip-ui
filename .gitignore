@@ -49,4 +49,5 @@ nosetests.xml
 sword2_logging.conf
 /src/tests/test/data/config
 /src/tests/test/data/dipdir
+/src/tests/test/data/.cache
 /dipenv
