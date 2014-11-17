@@ -73,6 +73,8 @@ The `dip package` and `dip deposit` commands could (almost) equivalently be just
 
 Sets configuration options
 
+@@TODO
+
 Details TBD.
 
     user?
@@ -220,6 +222,8 @@ Error if DIP directory does not exist or is not recognisable as a DIP, or packag
 
 
 ### Check status of deposit
+
+@@TODO
 
     dip status [--dip=<directory> | --package=<file>] --token=<deposit-token>
 
