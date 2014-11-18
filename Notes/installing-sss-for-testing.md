@@ -1,4 +1,4 @@
-# Installing Simple-Sword-Server form dip-ui testing
+# Installing Simple-Sword-Server for dip-ui testing
 
 Some of the `dip-ui` tests assumes that `SSS`, or `Simple-Sword-Server`, (from [here](https://github.com/swordapp/Simple-Sword-Server)) is running on port 8080.
 
