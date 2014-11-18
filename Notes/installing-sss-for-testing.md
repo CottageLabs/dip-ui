@@ -20,7 +20,7 @@ With `Simple-Sword-Server` source code project cloned from github:
     python setup.py build
     python setup.py install
 
-(where `*pyenv*` is the Python virtual environment used to run SSS)
+where `*pyenv*` is the Python virtual environment used to run SSS.  Note that, for testing, `SSS` can be installed in the same virtualenv as `dip` and `dip-ui`, or may be run in a separate environment.
 
 # Running Simple-Sword-Server
 
@@ -37,13 +37,11 @@ The problem appears to be that `sss-1.0` is not a valid Python mopdule name.  So
 
 and all seems well.
 
-Note that, for testing, `SSS` can be installed in the same virtualenv as `dip` and `dip-ui`, or may be run in a separate environment.
-
 # Configure `dip-ui` tests to use SSS collection
 
-We need to use a valid collection URI in the dip-ui test suite.  Browse to [http://localhost:8080/]() or to obtain a list of collection identifiers.
+We need to use a valid collection URI in the dip-ui test suite.  Browse to [http://localhost:8080/](http://localhost:8080/) or to obtain a list of collection identifiers.
 
-The service document is also shown at [http://localhost:8080/sd-uri]() - to view this, default credentials are `sword` and `sword`.  The service document contains links to full collection URIs which are used by the SWORD client.
+The service document is also shown at [http://localhost:8080/sd-uri](http://localhost:8080/sd-uri) - to view this, default credentials are `sword` and `sword`.  The service document contains links to full collection URIs which are used by the SWORD client.
 
 The `dip-ui` test suite configuration (in `src/tests/test_dip_cmp.py`) may need adjusting to use this:  the relevant block of code is about line 44:
 
