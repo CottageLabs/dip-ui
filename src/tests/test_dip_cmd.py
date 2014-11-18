@@ -41,8 +41,9 @@ from tests.SetcwdContext    import ChangeCurrentDir
 
 # This may need to be adjusted to reflect a collection URI offered by the local Sword server
 # Browse http://localhost:8080/ or http://localhost:8080/sd-uri for candidates
+SSS_COLL_ID = "02cbab10-c995-41c9-8ff5-8bebc225e082"
 SSS = SwordService(
-    collection_uri="http://localhost:8080/col-uri/02cbab10-c995-41c9-8ff5-8bebc225e082",
+    collection_uri="http://localhost:8080/col-uri/%s"%SSS_COLL_ID,
     servicedoc_uri="http://localhost:8080/sd-uri",
     username="sword",
     password="sword"
@@ -64,8 +65,11 @@ class TestDipCmd(unittest.TestCase):
     def setUp(self):
         self._dipdir = BASE_DIPDIR
         self._cnfdir = BASE_CONFIG
+        self._stsdir = os.path.join(BASE_CONFIG, "deposit_status")
         if self._dipdir.startswith(BASE_DIR) and os.path.isdir(self._dipdir):
             shutil.rmtree(self._dipdir)
+        if self._stsdir.startswith(BASE_DIR) and os.path.isdir(self._stsdir):
+            shutil.rmtree(self._stsdir)
         return
         
     def tearDown(self):
@@ -806,14 +810,14 @@ class TestDipCmd(unittest.TestCase):
         self.assertEqual(status, diperrors.DIP_SUCCESS)
 
         # Create package
-        argvdeposit   = (
+        argvpackage   = (
             [ "dip", "package", "--dip", "testdip"
             , "--collection_uri=%s"%(SSS.collection_uri)
             ])
         outstr = StringIO.StringIO()
         with ChangeCurrentDir(BASE_DIR):
             with SwitchStdout(outstr):
-                status = runCommand(self._cnfdir, self._dipdir, argvdeposit)
+                status = runCommand(self._cnfdir, self._dipdir, argvpackage)
         self.assertEqual(status, diperrors.DIP_SUCCESS)
         package = outstr.getvalue()
         log.info("package: %s"%(package))
@@ -830,6 +834,58 @@ class TestDipCmd(unittest.TestCase):
         self.assertEqual(status, diperrors.DIP_SUCCESS)
         result = outstr.getvalue()
         self.assertRegexpMatches(result, r'^token=.*$')
+        return
+
+    def test_44_dip_deposit_sss_status(self):
+        # deposit as single operation
+        dipdir = self.create_populate_tst_dip("testdip")
+        self.assertTrue(os.path.isdir(dipdir))
+        # Configure endpoint
+        argvconfig   = (
+            [ "dip", "config"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            , "--servicedoc_uri=%s"%(SSS.servicedoc_uri)
+            , "--username=%s"%(SSS.username)
+            , "--password=%s"%(SSS.password)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvconfig)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        # Create package and deposit
+        argvdeposit   = (
+            [ "dip", "deposit", "--dip", "testdip"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvdeposit)
+        result = outstr.getvalue()
+        log.info(result)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+
+        # Get status of deposit
+        result = result.splitlines()[0]
+        matchresult = re.match(r'token=(.*)$', result)
+        self.assertIsNotNone(matchresult)
+        token = matchresult.group(1)
+        argvstatus   = (
+            [ "dip", "status", "--dip", "testdip"
+            , "--collection_uri=%s"%(SSS.collection_uri)
+            , "--token=%s"%(token)
+            ])
+        outstr = StringIO.StringIO()
+        with ChangeCurrentDir(BASE_DIR):
+            with SwitchStdout(outstr):
+                status = runCommand(self._cnfdir, self._dipdir, argvstatus)
+        result = outstr.getvalue()
+        result = result.splitlines()[0]
+        log.info(result)
+        self.assertEqual(status, diperrors.DIP_SUCCESS)
+        pkguri = "http://localhost:8080/cont-uri/%s/%s"%(SSS_COLL_ID, token)
+        self.assertEqual(result, pkguri)
         return
 
 if __name__ == "__main__":

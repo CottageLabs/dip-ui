@@ -238,7 +238,7 @@ def run(configbase, filebase, options, progname):
         if status == 0:
             # @@TODO: add format option
             status = dip_deposit(
-                dipdir, 
+                configbase, dipdir, 
                 collection_uri=ss.collection_uri, servicedoc_uri=ss.servicedoc_uri, 
                 username=ss.username, password=ss.password,
                 basedir=os.getcwd()
@@ -257,7 +257,10 @@ def run(configbase, filebase, options, progname):
                 print("No token specified for status %s"%dipdir, file=sys.stderr)
                 status = diperrors.DIP_NOTOKEN
         if status == 0:
-            status = dip_status(dipdir, token, collection_uri=ss.collection_uri)
+            status = dip_status(
+                configbase, dipdir, token, 
+                collection_uri=ss.collection_uri
+                )
         if status == 0:
             dip_set_default_dir(configbase, filebase, dipdir)
             dip_save_service_details(configbase, filebase, ss)

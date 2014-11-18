@@ -18,6 +18,7 @@ import argparse
 import shutil
 import logging
 import errno
+import json
 
 log = logging.getLogger(__name__)
 
@@ -25,6 +26,8 @@ import dip
 
 from dipcmd     import diperrors
 from diplocal   import dip_use
+
+STATUSFILE = "deposit_status/"
 
 def dip_package(dipdir, basedir=None, format="http://purl.org/net/sword/package/SimpleZip"):
     """
@@ -45,7 +48,7 @@ def dip_package(dipdir, basedir=None, format="http://purl.org/net/sword/package/
     return diperrors.DIP_SUCCESS
 
 def dip_deposit(
-            dipdir,
+            configbase, dipdir,
             collection_uri=None, servicedoc_uri=None, username=None, password=None,
             basedir=None, format="http://purl.org/net/sword/package/SimpleZip"
             ):
@@ -97,10 +100,18 @@ def dip_deposit(
     #     print(description)   # a human readable description of the state (e.g. "It is in the Archive!")
     # print("********\n")
 
-    print("token=%s"%(dr.id))
+    # Save deposit receipt for later; use id to construct filename
+    tagauth, container_id, token = dr.id.split('/')
+    drfilename = status_filename(configbase, token)
+    ensure_dir(os.path.dirname(drfilename))
+    with open(drfilename, "w") as drf:
+        drf.write(status_json(token, dr))
+    # id has form tag:container@sss/container_id/token
+    # @@TODO: this next statement might be fragile
+    print("token=%s"%(token))
     return diperrors.DIP_SUCCESS
 
-def dip_status(dipdir, token, collection_uri=None):
+def dip_status(configbase, dipdir, token, collection_uri=None):
     """
     Determine status of previously submitted deposit requesrt.
 
@@ -108,10 +119,53 @@ def dip_status(dipdir, token, collection_uri=None):
     completion.  For now, it is implemented as a query to a sybnchronously
     completed deposit operation.
 
-    @@TODO: can we use the token to query the SSS status of the deposit>?
+    @@TODO: can we use the token to query the SSS for status of the deposit?
     """
-    raise NotImplementedError("@@TODO - deposit status query")
-    return
+    # Retrieve copy of deposit receipt as dictionary
+    drfilename = status_filename(configbase, token)
+    if not os.path.isfile(drfilename):
+        print("Unknown deposit token: %s"%token)
+        return diperrors.DIP_UNKNOWNTOKEN
+    with open(drfilename) as drf:
+        dr = json.loads(drf.read())
+    deposit_status = dr['response_headers']['status']
+    if deposit_status not in [200,201]:
+        print("Deposit failed: %03d"%deposit_status)
+        return diperrors.DIP_DEPOSITFAIL
+    print(dr['cont_iri'])    # URI of deposited package zip file
+    return diperrors.DIP_SUCCESS
+
+def status_filename(configbase, token):
+    """
+    Returns filename for saving deposit status information
+    """
+    return os.path.abspath(os.path.join(configbase, STATUSFILE, token))
+
+def status_json(token, dr):
+    """
+    Extract status information from depoisit recept as JSON string
+    """
+    status = (
+        { 'token':              token
+        , 'title':              dr.title
+        , 'id':                 dr.id
+        , 'updated':            dr.updated
+        , 'summary':            dr.summary
+        , 'categories':         dr.categories
+        , 'edit':               dr.edit
+        , 'edit_media':         dr.edit_media
+        # , 'edit_media_feed':    dr.edit_media_feed
+        , 'alternate':          dr.alternate
+        , 'se_iri':             dr.se_iri
+        , 'cont_iri':           dr.cont_iri
+        # , 'content':            dr.content
+        # , 'links':              dr.links
+        # , 'metadata':           dr.metadata
+        , 'packaging':          dr.packaging
+        , 'response_headers':   dr.response_headers
+        # , 'location':           dr.location
+        })
+    return json.dumps(status, indent=2, separators=(',', ': '))
 
 def format_CommsMeta(cm):
     txt    = "CommsMeta("
@@ -160,5 +214,16 @@ def format_DepositReceipt(dr):
             sep = ",\n    "
     txt += "\n    )"
     return txt
+
+def ensure_dir(dirname):
+    """
+    Ensure that a named directory exists; if it does not, attempt to create it.
+    """
+    try:
+        os.makedirs(dirname)
+    except OSError, e:
+        if e.errno != errno.EEXIST:
+            raise
+    return
 
 # End.

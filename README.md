@@ -292,8 +292,6 @@ Error if DIP directory does not exist or is not recognisable as a DIP, or packag
 
 ### Check status of deposit
 
-@@TODO
-
     dip status [--dip=<directory> | --package=<file>] --token=<deposit-token>
 
 Interrogates the status of a deposit identified by the supplied token (returned by a previous invocation of `dip deposit`).
@@ -305,4 +303,6 @@ Exit status:
 * 64 or greater: deposit failed.
 
 (cf. http://stackoverflow.com/questions/1101957/are-there-any-standard-exit-status-codes-in-linux)
+
+@@TODO: the current deposit implementation is synchronous, so exit status 1 is not used.  
 

@@ -9,9 +9,10 @@
 - [x] implement config command (DONE)
 - [x] Metadata? (Attribute tests present; generic metadata out of scope for the current development)
 - [x] setup.py
-- [>] Test against Databank - tried but failed.  Awaiting response.
-- [>] How to query status of previous deposit - need to save details locally, or can use SSS?  Awaiting response, but if none forthcoming will resort to saving receipt locally.
+- [x] How to query status of previous deposit - need to save details locally, or can use SSS?  Awaiting response, but if none forthcoming will resort to saving receipt locally.
 - [x] Pull request for dip to support filename paths in zip
+- [ ] Test against Databank - tried but failed.  Awaiting response.
+- [ ] Consider dropping "token=" from deposit response.
 
 
 ## Commands for manual testing
