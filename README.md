@@ -9,8 +9,13 @@ Deposit information package user interfaces
 
     cd $BASEDIR
     git clone git@github.com:CottageLabs/dip-ui.git
+    virtualenv dipenv
+    . dipenv/bin/activate
+    cd dip-ui/src
+    python setup.py build
+    python setup.py install
 
-@@TODO: provide proper setup.py; create virtalenv for installation; etc.
+@@TODO: test above
 
 ### Testing
 
@@ -28,7 +33,7 @@ Instructions assume starting with current directory being the root of the dip-ui
 
         pip install lxml
 
-    or, if that fails:
+    or, if that fails (on MacOS 10.9):
 
         CPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/usr/include/libxml2 pip install lxml==2.3.4
 

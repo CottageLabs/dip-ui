@@ -7,10 +7,10 @@
 - [x] Deposit from supplied package file? (Test added)
 - [x] Figure out token response from deposit?  Currently using deposit receipt id for token.
 - [x] implement config command (DONE)
+- [x] Metadata? (Attribute tests present; generic metadata out of scope for the current development)
+- [ ] setup.py
 - [ ] How to query status of previous deposit - need to save details locally, or can use SSS? 
 - [ ] Test against Databank
-- [ ] Metadata?
-- [ ] setup.py
 
 
 ## Commands for manual testing
