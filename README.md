@@ -8,18 +8,51 @@ Deposit information package user interfaces
 ### Installation
 
     cd $BASEDIR
-    git clone git@github.com:CottageLabs/dip-ui.git
     virtualenv dipenv
     . dipenv/bin/activate
+    git clone git@github.com:CottageLabs/dip.git
+    cd dip
+    python setup.py build
+    python setup.py install
+    cd ..
+    git clone git@github.com:CottageLabs/dip-ui.git
     cd dip-ui/src
     python setup.py build
     python setup.py install
+    cd ..
 
-@@TODO: test above
+NOTE: On MacOS 10.9 (with XCode), when installing the `dip` package, the attempted installation of `lxml` fails with the following messages:
+
+    Processing dependencies for dip==0.1
+    Searching for lxml
+    Reading http://pypi.python.org/simple/lxml/
+    Best match: lxml 3.4.0
+    Downloading https://pypi.python.org/packages/source/l/lxml/lxml-3.4.0.tar.gz#md5=bc90cc4e4ee04e1f8290ae0f70e34eea
+    Processing lxml-3.4.0.tar.gz
+    Running lxml-3.4.0/setup.py -q bdist_egg --dist-dir /var/folders/tw/z2lyyvzx1sq1qrvkp9qmgtb40000gn/T/easy_install-9ibfoR/lxml-3.4.0/egg-dist-tmp-wDDmW1
+    Building lxml version 3.4.0.
+    Building without Cython.
+    Using build configuration of libxslt 1.1.28
+    /System/Library/Frameworks/Python.framework/Versions/2.7/lib/python2.7/distutils/dist.py:267: UserWarning: Unknown distribution option: 'bugtrack_url'
+      warnings.warn(msg)
+    In file included from src/lxml/lxml.etree.c:232:
+    /var/folders/tw/z2lyyvzx1sq1qrvkp9qmgtb40000gn/T/easy_install-9ibfoR/lxml-3.4.0/src/lxml/includes/etree_defs.h:14:10: fatal error:
+          'libxml/xmlversion.h' file not found
+    #include "libxml/xmlversion.h"
+             ^
+    1 error generated.
+    error: Setup script exited with error: command 'cc' failed with exit status 1
+
+To fix this, I used the following command before running `setup.py install`:
+
+    CPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/usr/include/libxml2 pip install lxml==2.3.4
+
+(See http://stackoverflow.com/a/22333123/324122)
+
 
 ### Testing
 
-Instructions assume starting with current directory being the root of the dip-ui project; e.g.
+Instructions assume starting with current directory being the root of the dip-ui project, but do not assume completion of the installation process above; e.g.
 
     $ pwd
     /Users/graham/workspace/github/cottagelabs/dip-ui
@@ -37,6 +70,9 @@ Instructions assume starting with current directory being the root of the dip-ui
 
         CPATH=/Applications/Xcode.app/Contents/Developer/Platforms/MacOSX.platform/Developer/SDKs/MacOSX10.9.sdk/usr/include/libxml2 pip install lxml==2.3.4
 
+    (See http://stackoverflow.com/a/22333123/324122)
+
+
 3. Install `dip`.  I am assuming dip repository is in sibling directory of `dip-ui` project.
 
         cd ../dip/
@@ -48,7 +84,26 @@ Instructions assume starting with current directory being the root of the dip-ui
 
         pip install nose
 
-5. Run tests:
+5. Install Simple-Sword-Server.  See [Notes/installing-sss-for-testing.md](Notes/installing-sss-for-testing.md) for details.
+
+6. Edit collection URI in `src/tests/test-dip-cmd.py`; e.g.:
+
+        SSS = SwordService(
+            collection_uri="http://localhost:8080/col-uri/02cbab10-c995-41c9-8ff5-8bebc225e082",
+            servicedoc_uri="http://localhost:8080/sd-uri",
+            username="sword",
+            password="sword"
+            )
+
+    where the `collection_uri` value is one of the values obtained from an instance of `Simple-Sword-Server` running on the local machine by browsing to [http://localhost:8080/sd-uri]()), and then looking for an XML element of the form:
+
+        <collection href="http://localhost:8080/col-uri/02cbab10-c995-41c9-8ff5-8bebc225e082">
+            :
+        </collection>
+
+    The value of the `href=` attibute can be used as the value for `collection_uri` in `src/tests/test-dip-cmd.py`.
+
+7. Run tests:
 
         cd src
         nosetests

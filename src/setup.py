@@ -50,3 +50,6 @@ dio-ui - Command line tool for deposit to SWORDv2-enabled repository""",
 #     sword2==0.1
 #     web.py==0.37
 #     wsgiref==0.1.2
+#
+# See:
+#     https://github.com/CottageLabs/dip-ui/blob/master/Notes/installing-sss-for-testing.md
